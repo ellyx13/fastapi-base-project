@@ -1,6 +1,6 @@
 import sys
 
-from config import PATH_LOGS
+from config import settings
 from fastapi import FastAPI
 from loguru import logger
 from routers import api_routers
@@ -30,7 +30,7 @@ logger.add(
     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | {level} | <cyan>{name}</cyan>:<cyan>{function}</cyan> | <level>{message}</level>",
 )
 logger.add(
-    PATH_LOGS,
+    settings.logs_path,
     colorize=False,
     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | {level} | <cyan>{name}</cyan>:<cyan>{function}</cyan> | <level>{message}</level>",
     rotation="100 MB",

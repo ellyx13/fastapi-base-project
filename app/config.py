@@ -1,9 +1,11 @@
-import os
-
-ENVIRONMENT = os.getenv("ENVIRONMENT")
-PROJECT_PATH = "/opt/projects/app"
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
-# Log file path
-PATH_LOGS = "/opt/projects/app/logs/access.log"
-
+class Settings(BaseSettings):
+    environment: str
+    project_path: str = Field(default='/opt/projects/app')
+    logs_path: str = Field(default='/opt/projects/app/logs/access.log')
+    
+    
+settings = Settings()

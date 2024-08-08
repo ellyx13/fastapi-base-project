@@ -2,11 +2,12 @@ services:
   api-test:
     build: ./app
     restart: always
-    command: pytest .
-    ports:
-      - "8005:8005"
+    command: pytest ../tests/
+    volumes:
+      - ./tests/:/opt/projects/tests
     env_file:
       - ./.env/dev.env
+      - ./.env/test.env
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -s -f http://localhost:8005/v1/health/ping || exit 1"]
       interval: 60s

@@ -3,7 +3,7 @@ import re
 
 from bson import ObjectId
 
-from .engine import Engine, app_engine
+from .engine import Engine
 
 
 class BaseCRUD:
@@ -21,16 +21,18 @@ class BaseCRUD:
         return await self.collection.count_documents(filter=filter)
     
     async def convert_object_id_to_string(self, document: dict):
+        if document.get("_id") is None:
+            return document
         document["_id"] = str(document["_id"])
         return document
 
-    async def build_field_projection(self, fields_limit: str = None) -> dict:
+    async def build_field_projection(self, fields_limit: list = None) -> dict:
         """
         Constructs a MongoDB field projection dictionary from a comma-separated string.
     
         Args:
-            fields_limit (str): A comma-separated string of field names to include in the projection.
-                                For example, "name,age,address".
+            fields_limit (list): A list of field names to include in the projection.
+                                For example, ["name", "age", "address"].
     
         Returns:
             dict: A dictionary where keys are field names and values are 1, indicating the fields to include
@@ -39,7 +41,7 @@ class BaseCRUD:
         if not fields_limit:
             return {}
         fields = {}
-        for field in fields_limit.split(","):
+        for field in fields_limit:
             field = field.strip()
             fields[field] = 1
         return fields
@@ -105,7 +107,7 @@ class BaseCRUD:
         return str(document.inserted_id)
 
 
-    async def save_many(self, data: list) -> bool:
+    async def save_many(self, data: list) -> list | None:
         """
         Inserts multiple documents into the collection.
         
@@ -116,9 +118,12 @@ class BaseCRUD:
             bool: True if the insertion was successful, False otherwise.
         """
         documents = await self.collection.insert_many(documents=data)
-        if documents:
-            return True
-        return False
+        if not documents:
+            return None
+        results = []
+        for document_id in documents.inserted_ids:
+            results.append(str(document_id))
+        return results
 
     async def save_unique(self, data: dict, unique_field: list | str) -> str | bool:
         """
@@ -209,7 +214,7 @@ class BaseCRUD:
         result = await self.collection.delete_one(filter=query)
         return result.deleted_count > 0
     
-    async def delete_field_by_id(self, _id: str, field_name: str | list):
+    async def delete_field_by_id(self, _id: str, field_name: str | list) -> bool:
         """
         Deletes specified fields from a document in the collection based on the document's ID.
 
@@ -228,7 +233,7 @@ class BaseCRUD:
         return result.modified_count > 0
 
 
-    async def get_by_id(self, _id, fields_limit: str = None, filter: dict = None) -> dict | None:
+    async def get_by_id(self, _id, fields_limit: list = None, filter: dict = None) -> dict | None:
         """
         Retrieves a document from the collection based on its ID, with optional field limitations and additional filter.
 
@@ -252,7 +257,7 @@ class BaseCRUD:
         result = await self.convert_object_id_to_string(document=result)
         return result
 
-    async def get_by_field(self, data: str, field_name: str, fields_limit: str = None, filter: dict = None) -> dict | None:
+    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, filter: dict = None) -> dict | None:
         """
         Retrieves a document from the collection based on a specific field value, with optional field limitations and additional filter.
 
@@ -277,7 +282,7 @@ class BaseCRUD:
         result = await self.convert_object_id_to_string(document=result)
         return result
 
-    async def get_all_by_field(self, data: str, field_name: str, fields_limit: str = None, filter: dict = None) -> list | None:
+    async def get_all_by_field(self, data: str, field_name: str, fields_limit: list = None, filter: dict = None) -> list | None:
         """
         Retrieves all documents from the collection that match a specific field value, with optional field limitations and additional filter.
 
@@ -302,16 +307,17 @@ class BaseCRUD:
             return None
         results = []
         async for document in documents:
-            document = await self.to_dictionary(document)
+            document = await self.convert_object_id_to_string(document=document)
             results.append(document)
         return results
 
-    async def get_all(self, filter: dict = None, search_in: list = None, page: int = None, limit: int = None, fields_limit: str = None, sort_by: str = None, order_by: str = None) -> dict:
+    async def get_all(self, filter: dict = None, search: str = None, search_in: list = None, page: int = None, limit: int = None, fields_limit: list = None, sort_by: str = None, order_by: str = None) -> dict:
         """
         Retrieves all documents from the collection based on various filters, pagination, sorting, and field limitations.
 
         Args:
             filter (dict, optional): The filter criteria for querying the collection.
+            search (str): A string to search for in the search_in fields.
             search_in (list, optional): A list of fields to search in if a search query is provided.
             page (int, optional): The page number for pagination.
             limit (int, optional): The number of documents per page.
@@ -331,7 +337,7 @@ class BaseCRUD:
         skip = (page - 1) * limit if page and limit else 0
 
         # Remove common pagination and sorting parameters from the query dictionary
-        common_params = {"page", "limit", "fields", "sort_by", "order_by"}
+        common_params = {"search", "page", "limit", "fields", "sort_by", "order_by"}
         query = {k: v for k, v in (filter or {}).items() if k not in common_params}
         query = self.replace_special_chars(value=query)
         # Convert string representations of booleans to actual Boolean values in the query dictionary
@@ -342,20 +348,24 @@ class BaseCRUD:
         # then extends it with a series of dictionaries. Each dictionary represents a search condition on different fields,
         # specified in the 'search_in' list, using a regex pattern to perform a case-insensitive search of the 'search' string.
         # After constructing the search conditions, the 'search' key is removed from the query to prevent further processing issues.
-        if query.get("search"):
-            search = query["search"]
+        if search:
             search = self.replace_special_chars(value=search)
             query["$or"] = []
             query["$or"].extend({search_key: {"$regex": f".*{search}.*", "$options": "i"}} for search_key in search_in)
-            del query["search"]
 
-        documents = self.collection.find(filter=query, projection=fields_limit).sort(key_or_list=sorting).skip(key_or_list=skip).limit(limit=limit)
+        documents = self.collection.find(filter=query, projection=fields_limit)
+        if sorting:
+            documents = documents.sort(key_or_list=sorting)
+        if skip:
+            documents = documents.skip(key_or_list=skip)
+        if limit:
+            documents = documents.limit(limit)
 
         result = {}
         result["records_per_page"] = 0
         results = []
         async for document in documents:
-            document = await self.to_dictionary(document)
+            document = await self.convert_object_id_to_string(document=document)
             results.append(document)
             result["records_per_page"] += 1
         total_records = await self.collection.count_documents(query)

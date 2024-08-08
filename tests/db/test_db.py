@@ -8,7 +8,7 @@ base_crud = BaseCRUD(database_engine=app_engine, collection=collection_name)
 
 
 # ------------- Testing the Constructor and set_collection method ------------ #
-@pytest.mark.asyncio(scope="session")
+@pytest.mark.anyio(scope="session")
 def test_constructor():
     assert base_crud.collection_name == collection_name
 
@@ -50,10 +50,10 @@ async def test_save_unique():
 # ---------------------- Testing count_documents method ---------------------- #
 @pytest.mark.asyncio(scope="session")
 async def test_count_documents():
-    count = await base_crud.count_documents(filter={"name": "John Doe"})
+    count = await base_crud.count_documents(query={"name": "John Doe"})
     assert count == 2
     
-    count = await base_crud.count_documents(filter={"name": "Not Found"})
+    count = await base_crud.count_documents(query={"name": "Not Found"})
     assert count == 0
 
 
@@ -102,13 +102,13 @@ async def test_get_all_by_field():
     
 @pytest.mark.asyncio(scope="session")
 async def test_get_all():
-    items = await base_crud.get_all(filter={"name": "John Doe"})
+    items = await base_crud.get_all(query={"name": "John Doe"})
     assert items['total_items'] == 2
     
-    items = await base_crud.get_all(filter={"name": "John Doe"}, limit=1)
+    items = await base_crud.get_all(query={"name": "John Doe"}, limit=1)
     assert items['records_per_page'] == 1
     
-    items = await base_crud.get_all(filter={"name": "Not Found 1"})
+    items = await base_crud.get_all(query={"name": "Not Found 1"})
     assert items['total_items'] == 0
     
     items = await base_crud.get_all(search="John Doe", search_in=["name"])

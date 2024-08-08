@@ -17,8 +17,8 @@ class BaseCRUD:
         self.collection = self.database[collection]
         self.collection_name = collection
         
-    async def count_documents(self, filter: dict = None) -> int:
-        return await self.collection.count_documents(filter=filter)
+    async def count_documents(self, query: dict = None) -> int:
+        return await self.collection.count_documents(filter=query)
     
     async def convert_object_id_to_string(self, document: dict):
         if document.get("_id") is None:
@@ -146,7 +146,7 @@ class BaseCRUD:
             for key in data.keys():
                 if key in unique_field:
                     query[key] = data[key]
-            is_exist = await self.count_documents(filter=query)
+            is_exist = await self.count_documents(query=query)
         elif isinstance(unique_field, str):
             is_exist = await self.collection.find_one(filter={unique_field: data[unique_field]})
         else:
@@ -173,22 +173,22 @@ class BaseCRUD:
             results.append(document)
         return results
 
-    async def update_by_id(self, _id: str, data: dict, filter: dict = None) -> bool:
+    async def update_by_id(self, _id: str, data: dict, query: dict = None) -> bool:
         """
-        Updates a document in the collection based on its ID and an optional filter.
+        Updates a document in the collection based on its ID and an optional query.
 
         Args:
             _id (str): The ID of the document to be updated.
             data (dict): The data to update in the document.
-            filter (dict, optional): Additional filter criteria for the update operation.
+            query (dict, optional): Additional query criteria for the update operation.
 
         Returns:
             bool: True if the document was successfully updated (i.e., at least one field was modified), 
                   False if no changes were made to the document or the document did not exist.
         """
-        query = {"_id": ObjectId(_id)}
-        if filter:
-            query.update(filter)
+        if not query:
+            query = {}
+        query.update({"_id": ObjectId(_id)})
         result = await self.collection.update_one(filter=query, update={"$set": data}, upsert=False)
         
         # The return statement `return update_result.modified_count > 0` checks if the number of documents 
@@ -197,20 +197,20 @@ class BaseCRUD:
         # the document did not exist or the data provided did not change any fields), it returns False.
         return result.modified_count > 0
 
-    async def delete_by_id(self, _id: str, filter: dict = None) -> bool:
+    async def delete_by_id(self, _id: str, query: dict = None) -> bool:
         """
-        Deletes a document from the collection based on its ID and an optional filter.
+        Deletes a document from the collection based on its ID and an optional query.
 
         Args:
             _id (str): The ID of the document to be deleted.
-            filter (dict, optional): Additional filter criteria for the delete operation.
+            query (dict, optional): Additional query criteria for the delete operation.
 
         Returns:
             bool: True if the document was successfully deleted, False otherwise.
         """
-        query = {"_id": ObjectId(_id)}
-        if filter:
-            query.update(filter)
+        if not query:
+            query = {}
+        query.update({"_id": ObjectId(_id)})
         result = await self.collection.delete_one(filter=query)
         return result.deleted_count > 0
     
@@ -233,23 +233,23 @@ class BaseCRUD:
         return result.modified_count > 0
 
 
-    async def get_by_id(self, _id, fields_limit: list = None, filter: dict = None) -> dict | None:
+    async def get_by_id(self, _id, fields_limit: list = None, query: dict = None) -> dict | None:
         """
-        Retrieves a document from the collection based on its ID, with optional field limitations and additional filter.
+        Retrieves a document from the collection based on its ID, with optional field limitations and additional query.
 
         Args:
             _id (str): The ID of the document to be retrieved.
             fields_limit (str, optional): A comma-separated string of field names to include in the result.
                                           If None, all fields are included.
-            filter (dict, optional): Additional filter criteria to further refine the search.
+            query (dict, optional): Additional query criteria to further refine the search.
 
         Returns:
             dict | None: The retrieved document with `_id` converted to a string, or None if no document is found.
         """
         fields_limit = await self.build_field_projection(fields_limit=fields_limit)
-        query = {"_id": ObjectId(_id)}
-        if filter:
-            query.update(filter)
+        if not query:
+            query = {}
+        query.update({"_id": ObjectId(_id)})
         query = self.replace_special_chars(value=query)
         result = await self.collection.find_one(filter=query, projection=fields_limit)
         if not result:
@@ -257,24 +257,24 @@ class BaseCRUD:
         result = await self.convert_object_id_to_string(document=result)
         return result
 
-    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, filter: dict = None) -> dict | None:
+    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, query: dict = None) -> dict | None:
         """
-        Retrieves a document from the collection based on a specific field value, with optional field limitations and additional filter.
+        Retrieves a document from the collection based on a specific field value, with optional field limitations and additional query.
 
         Args:
             data (str): The value to search for in the specified field.
             field_name (str): The name of the field to search in.
             fields_limit (str, optional): A comma-separated string of field names to include in the result.
                                           If None, all fields are included.
-            filter (dict, optional): Additional filter criteria to further refine the search.
+            query (dict, optional): Additional query criteria to further refine the search.
 
         Returns:
             dict | None: The retrieved document with `_id` converted to a string, or None if no document is found.
         """
         fields_limit = await self.build_field_projection(fields_limit=fields_limit)
-        query = {field_name: data}
-        if filter:
-            query.update(filter)
+        if not query:
+            query = {}
+        query.update({field_name: data})
         query = self.replace_special_chars(value=query)
         result = await self.collection.find_one(filter=query, projection=fields_limit)
         if not result:
@@ -282,25 +282,25 @@ class BaseCRUD:
         result = await self.convert_object_id_to_string(document=result)
         return result
 
-    async def get_all_by_field(self, data: str, field_name: str, fields_limit: list = None, filter: dict = None) -> list | None:
+    async def get_all_by_field(self, data: str, field_name: str, fields_limit: list = None, query: dict = None) -> list | None:
         """
-        Retrieves all documents from the collection that match a specific field value, with optional field limitations and additional filter.
+        Retrieves all documents from the collection that match a specific field value, with optional field limitations and additional query.
 
         Args:
             data (str): The value to search for in the specified field.
             field_name (str): The name of the field to search in.
             fields_limit (str, optional): A comma-separated string of field names to include in the results.
                                           If None, all fields are included.
-            filter (dict, optional): Additional filter criteria to further refine the search.
+            query (dict, optional): Additional query criteria to further refine the search.
 
         Returns:
             list | None: A list of dictionaries representing the retrieved documents with `_id` converted to a string,
                          or None if no documents are found.
         """
         fields_limit = await self.build_field_projection(fields_limit=fields_limit)
-        query = {field_name: data}
-        if filter:
-            query.update(filter)
+        if not query:
+            query = {}
+        query.update({field_name: data})
         query = self.replace_special_chars(value=query)
         documents = self.collection.find(filter=query, projection=fields_limit)
         if not documents:
@@ -311,12 +311,12 @@ class BaseCRUD:
             results.append(document)
         return results
 
-    async def get_all(self, filter: dict = None, search: str = None, search_in: list = None, page: int = None, limit: int = None, fields_limit: list = None, sort_by: str = None, order_by: str = None) -> dict:
+    async def get_all(self, query: dict = None, search: str = None, search_in: list = None, page: int = None, limit: int = None, fields_limit: list = None, sort_by: str = None, order_by: str = None) -> dict:
         """
-        Retrieves all documents from the collection based on various filters, pagination, sorting, and field limitations.
+        Retrieves all documents from the collection based on various query, pagination, sorting, and field limitations.
 
         Args:
-            filter (dict, optional): The filter criteria for querying the collection.
+            query (dict, optional): The query criteria for querying the collection.
             search (str): A string to search for in the search_in fields.
             search_in (list, optional): A list of fields to search in if a search query is provided.
             page (int, optional): The page number for pagination.
@@ -338,7 +338,7 @@ class BaseCRUD:
 
         # Remove common pagination and sorting parameters from the query dictionary
         common_params = {"search", "page", "limit", "fields", "sort_by", "order_by"}
-        query = {k: v for k, v in (filter or {}).items() if k not in common_params}
+        query = {k: v for k, v in (query or {}).items() if k not in common_params}
         query = self.replace_special_chars(value=query)
         # Convert string representations of booleans to actual Boolean values in the query dictionary
         query = self.convert_bools(value=query)

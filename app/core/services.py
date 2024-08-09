@@ -54,7 +54,7 @@ class BaseServices:
             return False
         raise CoreErrorCode.NotModified(service_name=self.service_name)
 
-    async def check_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool:
+    async def _check_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool:
         unique_field = [unique_field] if type(unique_field) is str else unique_field
         query = {}
         for field in unique_field:
@@ -101,18 +101,18 @@ class BaseServices:
         if check_modified:
             await self._check_modified(old_data=item, new_data=data, ignore_error=ignore_error)
         if unique_field:
-            await self.check_unique(data=data, unique_field=unique_field, ignore_error=ignore_error)
+            await self._check_unique(data=data, unique_field=unique_field, ignore_error=ignore_error)
         await self.crud.update_by_id(_id=_id, data=data)
         result = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted)
         return result
         
-    async def hard_delete_by_id(self, _id, query: dict = None) -> bool:
+    async def hard_delete_by_id(self, _id: str, query: dict = None) -> bool:
         result = await self.crud.delete_by_id(_id=_id, query=query)
         if not result:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
         return result
 
-    async def soft_delete_by_id(self, _id):
+    async def soft_delete_by_id(self, _id: str) -> dict:
         data_update = {}
         data_update["deleted_at"] = self.get_current_datetime()
         result = await self.update_by_id(_id=_id, data=data_update)

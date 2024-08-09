@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from loguru import logger
 from routers import api_routers
-from .exceptions import CustomException
+from exceptions import CustomException
 
 app = FastAPI(
     title="FastAPI Base Project",

@@ -20,7 +20,7 @@ class UserControllers(BaseControllers):
 
     async def get_me(self, commons: CommonsDependencies, fields: str = None):
         current_user_id = self.get_current_user(commons=commons)
-        return await self.service.get_by_id(_id=current_user_id, fields_limit=fields)
+        return await self.get_by_id(_id=current_user_id, fields_limit=fields, commons=commons)
 
 
 user_controllers = UserControllers(controller_name="users", service=user_services)

@@ -34,6 +34,7 @@ class Response(BaseModel):
     phone: Optional[PhoneStr] = None
     type: str
     created_at: datetime
+    created_by: str
 
 
 class ListResponse(BaseModel):

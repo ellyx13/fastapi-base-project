@@ -24,12 +24,33 @@ class BaseServices:
         """
         return datetime.now()
 
-    async def get_by_id(self, _id, fields_limit: list | str = None, query: dict = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+    def get_current_user(self, commons: CommonsDependencies):
+        return commons.current_user
+
+    def get_current_user_type(self, commons: CommonsDependencies):
+        return commons.user_type
+
+    def build_ownership_query(self, commons: CommonsDependencies = None) -> dict | None:
+        if not commons:
+            return None
+        current_user_id = self.get_current_user(commons=commons)
+        if not current_user_id:
+            return None
+        query = {}
+        query["created_by"] = current_user_id
+        return query
+
+    async def get_by_id(self, _id, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> dict:
         self.ensure_crud_provided()
+        query = {}
         if not include_deleted:
-            if not query:
-                query = {}
             query.update({"deleted_at": None})
+
+        # Enhance owner user query
+        ownership_query = self.build_ownership_query(commons=commons)
+        if ownership_query:
+            query.update(ownership_query)
+
         item = await self.crud.get_by_id(_id=_id, fields_limit=fields_limit, query=query)
         if not item and not ignore_error:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
@@ -46,20 +67,35 @@ class BaseServices:
         sort_by: str = "created_at",
         order_by: str = "desc",
         include_deleted: bool = False,
+        commons: CommonsDependencies = None,
     ) -> dict:
         self.ensure_crud_provided()
+        if not query:
+            query = {}
         if not include_deleted:
-            if not query:
-                query = {}
             query.update({"deleted_at": None})
+
+        # Enhance owner user query
+        ownership_query = self.build_ownership_query(commons=commons)
+        if ownership_query:
+            query.update(ownership_query)
+
         item = await self.crud.get_all(query=query, search=search, search_in=search_in, page=page, limit=limit, fields_limit=fields_limit, sort_by=sort_by, order_by=order_by)
         return item
 
-    async def get_by_field(self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+    async def get_by_field(
+        self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
+    ) -> dict:
         self.ensure_crud_provided()
         query = {}
         if not include_deleted:
             query.update({"deleted_at": None})
+
+        # Enhance owner user query
+        ownership_query = self.build_ownership_query(commons=commons)
+        if ownership_query:
+            query.update(ownership_query)
+
         item = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
         if not item and not ignore_error:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
@@ -118,9 +154,11 @@ class BaseServices:
         result = await self.get_by_id(_id=item)
         return result
 
-    async def update_by_id(self, _id: str, data: dict, unique_field: str | list = None, check_modified: bool = True, ignore_error: bool = False, include_deleted: bool = False) -> dict | None:
+    async def update_by_id(
+        self, _id: str, data: dict, unique_field: str | list = None, check_modified: bool = True, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
+    ) -> dict | None:
         self.ensure_crud_provided()
-        item = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted)
+        item = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)
         if not item and ignore_error:
             return None
         if check_modified:
@@ -131,22 +169,17 @@ class BaseServices:
         result = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted)
         return result
 
-    async def hard_delete_by_id(self, _id: str, query: dict = None) -> bool:
+    async def hard_delete_by_id(self, _id: str, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> bool:
         self.ensure_crud_provided()
-        result = await self.crud.delete_by_id(_id=_id, query=query)
+        await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)
+        result = await self.crud.delete_by_id(_id=_id)
         if not result:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
         return result
 
-    async def soft_delete_by_id(self, _id: str) -> dict:
+    async def soft_delete_by_id(self, _id: str, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> dict:
         self.ensure_crud_provided()
         data_update = {}
         data_update["deleted_at"] = self.get_current_datetime()
-        result = await self.update_by_id(_id=_id, data=data_update)
+        result = await self.update_by_id(_id=_id, data=data_update, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)
         return result
-
-    def get_current_user(self, commons: CommonsDependencies):
-        return commons.current_user
-
-    def get_current_user_type(self, commons: CommonsDependencies):
-        return commons.user_type

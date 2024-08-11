@@ -33,6 +33,7 @@ class RoutersCBV:
             fields_limit=pagination.fields,
             sort_by=pagination.sort_by,
             order_by=pagination.order_by,
+            commons=self.commons,
         )
         if pagination.fields:
             return results
@@ -40,7 +41,7 @@ class RoutersCBV:
 
     @router.get("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Get users success"}})
     async def get_detail(self, _id: ObjectIdStr, fields: str = None):
-        results = await user_controllers.get_by_id(_id=_id, fields_limit=fields)
+        results = await user_controllers.get_by_id(_id=_id, fields_limit=fields, commons=self.commons)
         if fields:
             return results
         return schemas.Response(**results)

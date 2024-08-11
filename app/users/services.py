@@ -27,6 +27,11 @@ class UserServices(BaseServices):
         data["password"] = await self.hash(value=data["password"])
         data_save = models.Users(**data).model_dump()
         item = await self.save_unique(data=data_save, unique_field="email")
+
+        # Update created_by after register to preserve query ownership logic
+        data_update = {"created_by": item["_id"]}
+        item = await self.update_by_id(_id=item["_id"], data=data_update)
+
         item["access_token"] = await authentication_services.create_access_token(user_id=item["_id"], user_type=item["type"])
         item["token_type"] = "bearer"
         return item

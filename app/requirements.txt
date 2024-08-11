@@ -7,6 +7,8 @@ pydantic==2.8.2
 pydantic-settings==2.4.0
 motor==3.5.1
 bcrypt==4.2.0
+python-jose==3.3.0
+python-dateutil==2.9.0.post0
 
 # For test
 pytest==8.3.2

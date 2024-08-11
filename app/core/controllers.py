@@ -1,3 +1,5 @@
+from core.schemas import CommonsDependencies
+
 from .services import BaseServices
 
 NOT_DECLARED_SERVICE = "Service must be an instance of BaseServices. Maybe the service has not been declared when creating the class Controllers"
@@ -13,25 +15,18 @@ class BaseControllers:
         self,
         query: dict = None,
         search: str = None,
-        search_in: list = None,                            
+        search_in: list = None,
         page: int = 1,
         limit: int = 20,
         fields_limit: list | str = None,
         sort_by: str = "created_at",
         order_by: str = "desc",
-        include_deleted: bool = False,                                                                                                                                                              
+        include_deleted: bool = False,
     ) -> dict:
         if not isinstance(self.service, BaseServices):
             raise TypeError(NOT_DECLARED_SERVICE)
         results = await self.service.get_all(
-            query=query, 
-            search=search, 
-            search_in=search_in, 
-            page=page, limit=limit, 
-            fields_limit=fields_limit, 
-            sort_by=sort_by, 
-            order_by=order_by, 
-            include_deleted=include_deleted
+            query=query, search=search, search_in=search_in, page=page, limit=limit, fields_limit=fields_limit, sort_by=sort_by, order_by=order_by, include_deleted=include_deleted
         )
         return results
 
@@ -52,3 +47,9 @@ class BaseControllers:
             raise TypeError(NOT_DECLARED_SERVICE)
         result = await self.service.soft_delete_by_id(_id=_id)
         return result
+
+    def get_current_user(self, commons: CommonsDependencies):
+        return commons.current_user
+
+    def get_current_user_type(self, commons: CommonsDependencies):
+        return commons.user_type

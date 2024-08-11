@@ -7,6 +7,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from loguru import logger
+from middlewares.v1.authentication import AuthenticationMiddleware
 from routers import api_routers
 
 app = FastAPI(
@@ -25,8 +26,13 @@ app = FastAPI(
 )
 
 
+# Routers
 app.include_router(api_routers)
 
+# Middlewares
+app.add_middleware(AuthenticationMiddleware)
+
+# Logger
 logger.remove()
 logger.add(
     sys.stdout,

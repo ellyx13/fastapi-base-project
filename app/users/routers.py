@@ -1,4 +1,4 @@
-from core.schemas import ObjectIdStr, PaginationParams
+from core.schemas import CommonsDependencies, ObjectIdStr, PaginationParams
 from fastapi import Depends
 from fastapi_restful.cbv import cbv
 from fastapi_restful.inferring_router import InferringRouter
@@ -14,6 +14,13 @@ router = InferringRouter(
 
 @cbv(router)
 class RoutersCBV:
+    commons: CommonsDependencies = Depends(CommonsDependencies)  # type: ignore
+
+    @router.get("/users/me", status_code=200, responses={200: {"model": schemas.Response, "description": "Get users success"}})
+    async def get_me(self, fields: str = None):
+        results = await user_controllers.get_me(commons=self.commons, fields=fields)
+        return schemas.Response(**results)
+
     @router.get("/users", status_code=200, responses={200: {"model": schemas.ListResponse, "description": "Get users success"}})
     async def get_all(self, pagination: PaginationParams = Depends()):
         search_in = ["fullname", "email"]

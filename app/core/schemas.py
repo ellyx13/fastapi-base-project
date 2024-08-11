@@ -1,10 +1,20 @@
-from fastapi import Query, Request
-from utils.value import OrderBy
-from .exceptions import ErrorCode as CoreErrorCode
-from typing import Annotated
-from pydantic.functional_validators import AfterValidator
 from datetime import datetime
+from typing import Annotated
+
+from fastapi import Query, Request
+from pydantic.functional_validators import AfterValidator
 from utils import validator
+from utils.value import OrderBy
+
+from .exceptions import ErrorCode as CoreErrorCode
+
+
+class CommonsDependencies:
+    def __init__(self, request: Request) -> None:
+        self.current_user = request.state.payload.get("user_id")
+        self.user_type = request.state.payload.get("user_type")
+        self.is_public_api = request.state.payload.get("is_public_api")
+
 
 class PaginationParams:
     def __init__(
@@ -24,23 +34,26 @@ class PaginationParams:
         self.fields = fields
         self.sort_by = sort_by
         self.order_by = order_by
-        
-        
+
+
 def check_object_id(value: str) -> str:
     if validator.check_object_id(_id=value):
         return value
     raise CoreErrorCode.InvalidObjectId(_id=value)
-    
+
+
 def check_email(value: str) -> str:
     if validator.check_email(email=value):
         return value
     raise CoreErrorCode.InvalidEmail(email=value)
-    
+
+
 def check_phone(value: str) -> str:
     if validator.check_phone(phone=value):
         return value
     raise CoreErrorCode.InvalidPhone(phone=value)
-    
+
+
 def check_date_format(value: str) -> str:
     try:
         datetime.strptime(value, "%Y-%m-%d")
@@ -53,5 +66,3 @@ ObjectIdStr = Annotated[str, AfterValidator(check_object_id)]
 EmailStr = Annotated[str, AfterValidator(check_email)]
 PhoneStr = Annotated[str, AfterValidator(check_phone)]
 DateStr = Annotated[str, AfterValidator(check_date_format)]
-
-

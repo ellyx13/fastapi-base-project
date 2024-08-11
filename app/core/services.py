@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from db.base import BaseCRUD
+from utils import value
 
 from . import config
 from .exceptions import ErrorCode as CoreErrorCode
@@ -36,6 +37,11 @@ class BaseServices:
         current_user_id = self.get_current_user(commons=commons)
         if not current_user_id:
             return None
+
+        current_user_type = self.get_current_user_type(commons=commons)
+        if current_user_type == value.UserRoles.ADMIN.value:
+            return None
+
         query = {}
         query["created_by"] = current_user_id
         return query
@@ -102,10 +108,10 @@ class BaseServices:
         return item
 
     async def _check_modified(self, old_data: dict, new_data: dict, ignore_error: bool) -> bool:
-        for key, value in new_data.items():
+        for key, item_value in new_data.items():
             if key in ["updated_at", "updated_by"]:
                 continue
-            if old_data.get(key) != value:
+            if old_data.get(key) != item_value:
                 return True
         if ignore_error:
             return False
@@ -166,7 +172,7 @@ class BaseServices:
         if unique_field:
             await self._check_unique(data=data, unique_field=unique_field, ignore_error=ignore_error)
         await self.crud.update_by_id(_id=_id, data=data)
-        result = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted)
+        result = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=True)
         return result
 
     async def hard_delete_by_id(self, _id: str, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> bool:
@@ -177,9 +183,10 @@ class BaseServices:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
         return result
 
-    async def soft_delete_by_id(self, _id: str, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> dict:
+    async def soft_delete_by_id(self, _id: str, ignore_error: bool = False, commons: CommonsDependencies = None) -> dict:
         self.ensure_crud_provided()
         data_update = {}
         data_update["deleted_at"] = self.get_current_datetime()
-        result = await self.update_by_id(_id=_id, data=data_update, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)
+        data_update["deleted_by"] = self.get_current_user(commons=commons)
+        result = await self.update_by_id(_id=_id, data=data_update, ignore_error=ignore_error, commons=commons)
         return result

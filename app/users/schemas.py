@@ -47,3 +47,8 @@ class ListResponse(BaseModel):
 class LoginResponse(Response):
     access_token: str
     token_type: str
+
+
+class EditRequest(BaseModel):
+    fullname: Optional[str] = None
+    phone: Optional[PhoneStr] = None

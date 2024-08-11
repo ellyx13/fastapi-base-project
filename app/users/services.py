@@ -1,5 +1,6 @@
 from auth.services import authentication_services
 from bcrypt import checkpw, gensalt, hashpw
+from core.schemas import CommonsDependencies
 from core.services import BaseServices
 from db.base import BaseCRUD
 from db.engine import app_engine
@@ -46,6 +47,11 @@ class UserServices(BaseServices):
         item["access_token"] = await authentication_services.create_access_token(user_id=item["_id"], user_type=item["type"])
         item["token_type"] = "bearer"
         return item
+
+    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
+        data["updated_at"] = self.get_current_datetime()
+        data["updated_by"] = self.get_current_user(commons=commons)
+        return await self.update_by_id(_id=_id, data=data)
 
 
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")

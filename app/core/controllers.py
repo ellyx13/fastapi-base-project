@@ -16,7 +16,7 @@ class BaseControllers:
         search_in: list = None,                            
         page: int = 1,
         limit: int = 20,
-        fields_limit: list = None,
+        fields_limit: list | str = None,
         sort_by: str = "created_at",
         order_by: str = "desc",
         include_deleted: bool = False,                                                                                                                                                              
@@ -35,13 +35,13 @@ class BaseControllers:
         )
         return results
 
-    async def get_by_id(self, _id, fields_limit: list = None, query: dict = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+    async def get_by_id(self, _id, fields_limit: list | str = None, query: dict = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
         if not isinstance(self.service, BaseServices):
             raise TypeError(NOT_DECLARED_SERVICE)
         result = await self.service.get_by_id(_id=_id, fields_limit=fields_limit, query=query, ignore_error=ignore_error, include_deleted=include_deleted)
         return result
 
-    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+    async def get_by_field(self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
         if not isinstance(self.service, BaseServices):
             raise TypeError(NOT_DECLARED_SERVICE)
         result = await self.service.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, ignore_error=ignore_error, include_deleted=include_deleted)

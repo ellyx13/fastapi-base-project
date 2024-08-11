@@ -15,7 +15,7 @@ class PaginationParams:
         limit: int = Query(default=20, gt=0),
         fields: str = None,
         sort_by: str = Query("created_at", description="Anything you want"),
-        order_by: OrderBy = Query(OrderBy.decrease.value, description="desc: Descending | asc: Ascending"),
+        order_by: OrderBy = Query(OrderBy.DECREASE.value, description="desc: Descending | asc: Ascending"),
     ):
         self.query = dict(request.query_params)
         self.search = search
@@ -53,6 +53,5 @@ ObjectIdStr = Annotated[str, AfterValidator(check_object_id)]
 EmailStr = Annotated[str, AfterValidator(check_email)]
 PhoneStr = Annotated[str, AfterValidator(check_phone)]
 DateStr = Annotated[str, AfterValidator(check_date_format)]
-
 
 

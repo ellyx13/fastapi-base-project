@@ -64,3 +64,12 @@ class ErrorCode:
             title="Invalid date format.",
             detail=f"The {date} is not a valid date. Please provide a valid date with YYYY-MM-DD format and try again."
         )
+        
+    @staticmethod
+    def Unauthorize():
+        return CustomException(
+            type="core/warning/unauthorize",
+            status=401,
+            title="Unauthorize.",
+            detail="Could not authorize credentials"
+        )

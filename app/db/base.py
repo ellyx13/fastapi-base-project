@@ -26,13 +26,13 @@ class BaseCRUD:
         document["_id"] = str(document["_id"])
         return document
 
-    async def build_field_projection(self, fields_limit: list = None) -> dict:
+    async def build_field_projection(self, fields_limit: list | str = None) -> dict:
         """
         Constructs a MongoDB field projection dictionary from a comma-separated string.
     
         Args:
-            fields_limit (list): A list of field names to include in the projection.
-                                For example, ["name", "age", "address"].
+            fields_limit (list | str): A list or string of field names to include in the projection.
+                                For example, ["name", "age", "address"], "name,age,address".
     
         Returns:
             dict: A dictionary where keys are field names and values are 1, indicating the fields to include
@@ -40,6 +40,8 @@ class BaseCRUD:
         """
         if not fields_limit:
             return {}
+        if isinstance(fields_limit, str):
+            fields_limit = fields_limit.split(",")
         fields = {}
         for field in fields_limit:
             field = field.strip()
@@ -73,7 +75,7 @@ class BaseCRUD:
         
         
         This function finds special characters that have specific meanings in regular expressions 
-        (e.g., ., *, +, ?, ^, $, {, }, (, ), |, [, ], \\) and escapes them by prefixing them with a backslash.
+        (e.g., *, +, ?, ^, $, {, }, (, ), |, [, ], \\) and escapes them by prefixing them with a backslash.
         This is useful when these characters need to be used in regular expression patterns or in other contexts 
         where they should be treated as literal characters.
 
@@ -85,7 +87,7 @@ class BaseCRUD:
                         or a single string with special characters escaped using a backslash.
         """
         # Define the pattern for special characters
-        pattern = r"([.*+?^${}()|[\]\\])"
+        pattern = r"([*+?^${}()|[\]\\])"
         # Replace the special characters with //
         if isinstance(value, dict):
             return {key: self.replace_special_chars(value=value) for key, value in value.items()}
@@ -355,9 +357,9 @@ class BaseCRUD:
 
         documents = self.collection.find(filter=query, projection=fields_limit)
         if sorting:
-            documents = documents.sort(key_or_list=sorting)
+            documents = documents.sort(sorting)
         if skip:
-            documents = documents.skip(key_or_list=skip)
+            documents = documents.skip(skip)
         if limit:
             documents = documents.limit(limit)
 

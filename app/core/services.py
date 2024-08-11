@@ -17,7 +17,7 @@ class BaseServices:
         """
         return datetime.now()
 
-    async def get_by_id(self, _id, fields_limit: list = None, query: dict = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+    async def get_by_id(self, _id, fields_limit: list | str = None, query: dict = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
         if not include_deleted:
             if not query:
                 query = {}
@@ -27,7 +27,7 @@ class BaseServices:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
         return item
 
-    async def get_all(self, query: dict = None, search: str = None, search_in: list = None, page: int = 1, limit: int = 20, fields_limit: list = None, sort_by: str = 'created_at', order_by: str = 'desc', include_deleted: bool = False) -> dict:
+    async def get_all(self, query: dict = None, search: str = None, search_in: list = None, page: int = 1, limit: int = 20, fields_limit: list | str = None, sort_by: str = 'created_at', order_by: str = 'desc', include_deleted: bool = False) -> dict:
         if not include_deleted:
             if not query:
                 query = {}
@@ -35,7 +35,7 @@ class BaseServices:
         item = await self.crud.get_all(query=query, search=search, search_in=search_in, page=page, limit=limit, fields_limit=fields_limit, sort_by=sort_by, order_by=order_by)
         return item
 
-    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+    async def get_by_field(self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
         query = {}
         if not include_deleted:
             query.update({"deleted_at": None})

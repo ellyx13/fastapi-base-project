@@ -5,10 +5,14 @@ from .exceptions import ErrorCode as CoreErrorCode
 from .schemas import PaginationParams
 
 class BaseServices:
-    def __init__(self, crud: BaseCRUD, service_name: str) -> None:
+    def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
         self.crud = crud
         self.service_name = service_name
         self.maximum_document_limit = config.MAXIMUM_DOCUMENT_LIMIT
+    
+    def ensure_crud_provided(self) -> None:
+        if self.crud is None:
+            raise ValueError(f"The 'crud' attribute must be provided for {self.service_name} service.")
 
     def get_current_datetime(self) -> datetime:
         """
@@ -18,6 +22,7 @@ class BaseServices:
         return datetime.now()
 
     async def get_by_id(self, _id, fields_limit: list | str = None, query: dict = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+        self.ensure_crud_provided()
         if not include_deleted:
             if not query:
                 query = {}
@@ -28,6 +33,7 @@ class BaseServices:
         return item
 
     async def get_all(self, query: dict = None, search: str = None, search_in: list = None, page: int = 1, limit: int = 20, fields_limit: list | str = None, sort_by: str = 'created_at', order_by: str = 'desc', include_deleted: bool = False) -> dict:
+        self.ensure_crud_provided()
         if not include_deleted:
             if not query:
                 query = {}
@@ -36,6 +42,7 @@ class BaseServices:
         return item
 
     async def get_by_field(self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False) -> dict:
+        self.ensure_crud_provided()
         query = {}
         if not include_deleted:
             query.update({"deleted_at": None})
@@ -71,11 +78,13 @@ class BaseServices:
         raise CoreErrorCode.Conflict(service_name=self.service_name, item=first_item)
 
     async def save(self, data: dict) -> dict:
+        self.ensure_crud_provided()
         item = await self.crud.save(data=data)
         result = await self.get_by_id(_id=item)
         return result
     
     async def save_many(self, data: list) -> list[dict]:
+        self.ensure_crud_provided()
         items = await self.crud.save_many(data=data)
         results = []
         for item_id in items:
@@ -84,6 +93,7 @@ class BaseServices:
         return results
 
     async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> dict:
+        self.ensure_crud_provided()
         item = await self.crud.save_unique(data=data, unique_field=unique_field)
         if not item and not ignore_error:
             if isinstance(unique_field, list):
@@ -95,6 +105,7 @@ class BaseServices:
         return result
     
     async def update_by_id(self, _id: str, data: dict, unique_field: str | list = None, check_modified: bool = True, ignore_error: bool = False, include_deleted: bool = False) -> dict | None:
+        self.ensure_crud_provided()
         item = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=include_deleted)
         if not item and ignore_error:
             return None
@@ -107,12 +118,14 @@ class BaseServices:
         return result
         
     async def hard_delete_by_id(self, _id: str, query: dict = None) -> bool:
+        self.ensure_crud_provided()
         result = await self.crud.delete_by_id(_id=_id, query=query)
         if not result:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
         return result
 
     async def soft_delete_by_id(self, _id: str) -> dict:
+        self.ensure_crud_provided()
         data_update = {}
         data_update["deleted_at"] = self.get_current_datetime()
         result = await self.update_by_id(_id=_id, data=data_update)

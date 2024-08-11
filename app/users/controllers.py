@@ -7,11 +7,11 @@ class UserControllers(BaseControllers):
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         super().__init__(controller_name, service)
 
-    async def register(self, data: schemas.RegisterRequest):
+    async def register(self, data: schemas.RegisterRequest) -> dict:
         data = data.model_dump()
         return await self.service.register(data=data)
         
-    async def login(self, data: schemas.LoginRequest):
+    async def login(self, data: schemas.LoginRequest) -> dict:
         data = data.model_dump()
         return await self.service.login(data=data)
         

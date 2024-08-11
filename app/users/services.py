@@ -6,13 +6,13 @@ from bcrypt import gensalt, hashpw, checkpw
 from .exceptions import ErrorCode as UserErrorCode
 
 class UserServices(BaseServices):
-    def __init__(self, crud: BaseCRUD, service_name: str) -> None:
-        super().__init__(crud, service_name)
+    def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
+        super().__init__(service_name, crud)
         
-    async def hash(self, value):
+    async def hash(self, value) -> bytes:
         return hashpw(value.encode('utf8'), gensalt())
 
-    async def validate_hash(self, value, hashed_value):
+    async def validate_hash(self, value, hashed_value) -> bool:
         if not checkpw(value.encode('utf-8'), hashed_value):
             return False
         return True
@@ -34,5 +34,5 @@ class UserServices(BaseServices):
         return item
         
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")
-user_services = UserServices(crud=user_crud, service_name="users")
+user_services = UserServices(service_name="users", crud=user_crud)
         

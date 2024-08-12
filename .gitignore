@@ -1,3 +1,4 @@
 .env/
 logs/
 database/
+.pytest_cache/

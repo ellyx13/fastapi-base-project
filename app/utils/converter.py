@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from utils import value
+from app.utils import value
 
 
 def convert_datetime_to_str(datetime_obj: datetime) -> str:

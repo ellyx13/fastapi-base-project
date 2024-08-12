@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from core.schemas import EmailStr, ObjectIdStr, PhoneStr
 from pydantic import BaseModel
+
+from app.core.schemas import EmailStr, ObjectIdStr, PhoneStr
 
 
 class Users(BaseModel):

@@ -2,7 +2,7 @@ services:
   api:
     build: ./app
     restart: always
-    command: uvicorn main:app --reload --workers 1 --host 0.0.0.0 --port 8005
+    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8005
     volumes:
       - ./app/:/opt/projects/app/
       - ./logs/:/opt/projects/app/logs

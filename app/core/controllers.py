@@ -1,4 +1,4 @@
-from core.schemas import CommonsDependencies
+from app.core.schemas import CommonsDependencies
 
 from .services import BaseServices
 

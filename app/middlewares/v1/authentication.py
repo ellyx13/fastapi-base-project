@@ -1,5 +1,6 @@
-from auth.services import authentication_services
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from app.auth.services import authentication_services
 
 from .exceptions import ErrorCode as MiddlewareErrorCode
 

@@ -1,8 +1,9 @@
-from auth.decoractor import access_control
-from core.schemas import CommonsDependencies, ObjectIdStr, PaginationParams
 from fastapi import Depends
 from fastapi_restful.cbv import cbv
 from fastapi_restful.inferring_router import InferringRouter
+
+from app.auth.decoractor import access_control
+from app.core.schemas import CommonsDependencies, ObjectIdStr, PaginationParams
 
 from . import schemas
 from .controllers import user_controllers

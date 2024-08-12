@@ -1,7 +1,8 @@
 from fastapi import APIRouter
-from modules.v1.health import routers as health_routers
-from modules.v1.tasks import routers as tasks_routers
-from users import routers as users_routers
+
+from app.modules.v1.health import routers as health_routers
+from app.modules.v1.tasks import routers as tasks_routers
+from app.users import routers as users_routers
 
 api_routers = APIRouter()
 

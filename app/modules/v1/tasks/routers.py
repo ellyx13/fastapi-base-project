@@ -1,7 +1,8 @@
-from core.schemas import CommonsDependencies, ObjectIdStr, PaginationParams
 from fastapi import Depends
 from fastapi_restful.cbv import cbv
 from fastapi_restful.inferring_router import InferringRouter
+
+from app.core.schemas import CommonsDependencies, ObjectIdStr, PaginationParams
 
 from . import schemas
 from .controllers import task_controllers

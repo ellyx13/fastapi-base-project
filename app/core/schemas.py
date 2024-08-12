@@ -3,8 +3,9 @@ from typing import Annotated
 
 from fastapi import Query, Request
 from pydantic.functional_validators import AfterValidator
-from utils import validator
-from utils.value import OrderBy
+
+from app.utils import validator
+from app.utils.value import OrderBy
 
 from .exceptions import ErrorCode as CoreErrorCode
 

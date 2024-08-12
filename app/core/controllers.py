@@ -6,6 +6,22 @@ NOT_DECLARED_SERVICE = "Service must be an instance of BaseServices. Maybe the s
 
 
 class BaseControllers:
+    """
+    A base class for controllers that provides common methods for interacting with services.
+
+    This class is designed to work with a service instance derived from `BaseServices`. It offers methods
+    to perform common operations like retrieving all records, fetching records by ID or field, and soft-deleting records by ID.
+
+    Args:
+        controller_name (str): The name of the controller.
+        service (BaseServices, optional): An instance of a service class derived from `BaseServices`. Defaults to None.
+
+    Attributes:
+        controller_name (str): The name of the controller.
+        service (BaseServices): The service instance used for performing operations.
+        max_record_limit (int): The maximum number of records that can be retrieved, derived from the service's `maximum_document_limit`.
+    """
+
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         self.controller_name = controller_name
         self.service = service

@@ -23,16 +23,24 @@ class UserServices(BaseServices):
         return True
 
     async def register(self, data: schemas.RegisterRequest) -> dict:
+        # Set the user role to 'USER' by default.
         data["type"] = value.UserRoles.USER.value
+        # Add the current datetime as the creation time.
         data["created_at"] = self.get_current_datetime()
+        # Hash the provided password using bcrypt with a generated salt.
         data["password"] = await self.hash(value=data["password"])
+        # Validate the data by creating an instance of the Users model.
+        # This process helps validate fields in data according to validation rules defined in the Users model.
+        # Then convert it back to a dictionary for saving.
         data_save = models.Users(**data).model_dump()
+        # Save the user, ensuring the email is unique
         item = await self.save_unique(data=data_save, unique_field="email")
 
         # Update created_by after register to preserve query ownership logic
         data_update = {"created_by": item["_id"]}
         item = await self.update_by_id(_id=item["_id"], data=data_update)
 
+        # Generate an access token for the user.
         item["access_token"] = await authentication_services.create_access_token(user_id=item["_id"], user_type=item["type"])
         item["token_type"] = "bearer"
         return item
@@ -41,9 +49,12 @@ class UserServices(BaseServices):
         item = await self.get_by_field(data=data["email"], field_name="email", ignore_error=True)
         if not item:
             raise UserErrorCode.Unauthorize()
+        # Validate the provided password against the hashed value.
         is_valid_password = await self.validate_hash(value=data["password"], hashed_value=item["password"])
         if not is_valid_password:
             raise UserErrorCode.Unauthorize()
+
+        # Generate an access token for the user.
         item["access_token"] = await authentication_services.create_access_token(user_id=item["_id"], user_type=item["type"])
         item["token_type"] = "bearer"
         return item

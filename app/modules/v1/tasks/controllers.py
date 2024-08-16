@@ -1,6 +1,6 @@
-from app.core.controllers import BaseControllers
-from app.core.schemas import CommonsDependencies
-from app.core.services import BaseServices
+from core.controllers import BaseControllers
+from core.schemas import CommonsDependencies
+from core.services import BaseServices
 
 from . import schemas
 from .services import task_services

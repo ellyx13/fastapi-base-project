@@ -1,7 +1,7 @@
 import functools
 from typing import Any, Callable
 
-from app.utils import value
+from utils import value
 
 from .exceptions import ErrorCode as AuthErrorCode
 

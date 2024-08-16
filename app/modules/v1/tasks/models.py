@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Literal, Optional
 
+from core.schemas import ObjectIdStr
 from pydantic import BaseModel
-
-from app.core.schemas import ObjectIdStr
 
 
 class Tasks(BaseModel):

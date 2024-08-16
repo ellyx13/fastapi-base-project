@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from app.db.base import BaseCRUD
-from app.utils import value
+from db.base import BaseCRUD
+from utils import value
 
 from . import config
 from .exceptions import ErrorCode as CoreErrorCode

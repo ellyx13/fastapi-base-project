@@ -1,4 +1,4 @@
-from app.exceptions import CustomException
+from exceptions import CustomException
 
 
 class ErrorCode:

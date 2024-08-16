@@ -1,13 +1,12 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from auth.services import authentication_services
 from bcrypt import gensalt, hashpw
-
-from app.auth.services import authentication_services
-from app.exceptions import CustomException
-from app.users.exceptions import ErrorCode as UserErrorCode
-from app.users.schemas import LoginRequest, RegisterRequest
-from app.users.services import UserServices
+from exceptions import CustomException
+from users.exceptions import ErrorCode as UserErrorCode
+from users.schemas import LoginRequest, RegisterRequest
+from users.services import UserServices
 
 service_name = "users"
 

@@ -1,8 +1,7 @@
 import pytest
 from bson import ObjectId
-
-from app.db.base import BaseCRUD
-from app.db.engine import app_engine
+from db.base import BaseCRUD
+from db.engine import app_engine
 
 collection_name = "test"
 base_crud = BaseCRUD(database_engine=app_engine, collection=collection_name)

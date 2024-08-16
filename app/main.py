@@ -1,15 +1,14 @@
 import sys
 
+from config import settings
+from exceptions import CustomException
 from fastapi import FastAPI, Request, Response
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from loguru import logger
-
-from app.config import settings
-from app.exceptions import CustomException
-from app.middlewares.v1.authentication import AuthenticationMiddleware
-from app.routers import api_routers
+from middlewares.v1.authentication import AuthenticationMiddleware
+from routers import api_routers
 
 app = FastAPI(
     title="FastAPI Base Project",

@@ -25,6 +25,3 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 # Copy the rest of the application.
 COPY . .
-
-# Go back to the original path to ensure files can be imported in test and app environments
-WORKDIR /opt/projects

@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
+from core.schemas import EmailStr, PhoneStr
 from pydantic import BaseModel, Field, field_validator
-
-from app.core.schemas import EmailStr, PhoneStr
 
 from . import config
 from .exceptions import ErrorCode as UserErrorCode

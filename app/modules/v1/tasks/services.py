@@ -1,7 +1,7 @@
-from app.core.schemas import CommonsDependencies
-from app.core.services import BaseServices
-from app.db.base import BaseCRUD
-from app.db.engine import app_engine
+from core.schemas import CommonsDependencies
+from core.services import BaseServices
+from db.base import BaseCRUD
+from db.engine import app_engine
 
 from . import models, schemas
 

@@ -19,9 +19,10 @@ Welcome to the FastAPI Base Project! This foundational template is designed for 
 ## Getting Started
 
 ### Prerequisites
-- Git
-- Docker
-- Docker Compose
+
+- [Git](https://git-scm.com/)
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
 
 ### Cloning the Repository
 First, clone the repository from GitLab and navigate into the project directory:

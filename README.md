@@ -20,6 +20,8 @@ Welcome to the FastAPI Base Project! This foundational template is designed for 
 
 ### Prerequisites
 
+- [Python](https://www.python.org/)
+- [Pip](https://pip.pypa.io/en/stable/installation/)
 - [Git](https://git-scm.com/)
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
@@ -54,6 +56,16 @@ DEFAULT_ADMIN_PASSWORD={ENTER_YOUR_DEFAULT_PASSWORD}
 ```plaintext
 ENVIRONMENT=test
 database_url=mongodb://db-test?retryWrites=true
+```
+
+### Install pre-commit
+1. Download [pre-commit](https://pre-commit.com/):
+```bash
+pip install pre-commit
+```
+2. Install pre-commit
+```
+pre-commit install
 ```
 
 ### Running on Linux

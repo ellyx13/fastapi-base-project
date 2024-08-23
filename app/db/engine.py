@@ -18,4 +18,3 @@ class Engine(object):
 
 
 app_engine = Engine(database_url=settings.database_url, database_name=settings.app_database_name).get_database()
-log_engine = Engine(database_url=settings.database_url, database_name=settings.log_database_name).get_database()

@@ -32,6 +32,7 @@ class RoutersCBV:
         results = await user_controllers.get_me(commons=self.commons, fields=fields)
         return schemas.Response(**results)
 
+    @access_control(admin=True)
     @router.get("/users", status_code=200, responses={200: {"model": schemas.ListResponse, "description": "Get users success"}})
     async def get_all(self, pagination: PaginationParams = Depends()):
         search_in = ["fullname", "email"]

@@ -11,10 +11,12 @@ class UserControllers(BaseControllers):
         super().__init__(controller_name, service)
 
     async def register(self, data: schemas.RegisterRequest) -> dict:
+        # Convert the Pydantic model 'data' to a dictionary
         data = data.model_dump()
         return await self.service.register(data=data)
 
     async def login(self, data: schemas.LoginRequest) -> dict:
+        # Convert the Pydantic model 'data' to a dictionary
         data = data.model_dump()
         return await self.service.login(data=data)
 
@@ -23,7 +25,9 @@ class UserControllers(BaseControllers):
         return await self.get_by_id(_id=current_user_id, fields_limit=fields, commons=commons)
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
+        # Check if that user id exists or not
         await self.get_by_id(_id=_id, commons=commons)
+        # Convert the Pydantic model 'data' to a dictionary, excluding any fields with None values.
         data = data.model_dump(exclude_none=True)
         return await self.service.edit(_id=_id, data=data, commons=commons)
 

@@ -2,9 +2,9 @@ services:
   api-test:
     build: ./app
     restart: always
-    command: pytest ../tests/
+    command: pytest ./tests/
     volumes:
-      - ./tests/:/opt/projects/tests
+      - ./tests/:/opt/projects/app/tests
     env_file:
       - ./.env/dev.env
       - ./.env/test.env

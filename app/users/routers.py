@@ -15,6 +15,16 @@ router = InferringRouter(
 
 @cbv(router)
 class RoutersCBV:
+    """
+    A class-based view for handling user-related routes in the FastAPI application.
+
+    This class uses FastAPI's class-based view (`cbv`) approach to define various endpoints for user management,
+    including retrieving user information, registering, logging in, updating, and deleting users.
+
+    Attributes:
+        commons (CommonsDependencies): Common dependencies for the request, such as the current user and user type.
+    """
+
     commons: CommonsDependencies = Depends(CommonsDependencies)  # type: ignore
 
     @router.get("/users/me", status_code=200, responses={200: {"model": schemas.Response, "description": "Get users success"}})
@@ -22,6 +32,7 @@ class RoutersCBV:
         results = await user_controllers.get_me(commons=self.commons, fields=fields)
         return schemas.Response(**results)
 
+    @access_control(admin=True)
     @router.get("/users", status_code=200, responses={200: {"model": schemas.ListResponse, "description": "Get users success"}})
     async def get_all(self, pagination: PaginationParams = Depends()):
         search_in = ["fullname", "email"]

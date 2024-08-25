@@ -17,7 +17,7 @@ RUN apk add --no-cache curl \
 
 # Copy the requirements file and install Python dependencies.
 # Use --no-cache-dir to prevent pip from saving the cache, which reduces image size.
-# After installing Python dependencies, remove the build dependencies to reduce the final image size (apk del .build-deps). 
+# After installing Python dependencies, remove the build dependencies to reduce the final image size (apk del .build-deps).
 # This is important because some dependencies are only needed for building wheel files and are not necessary afterwards.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \

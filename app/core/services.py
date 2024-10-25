@@ -176,7 +176,7 @@ class BaseServices:
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
-    ) -> dict:
+    ) -> list:
         """
         Retrieves a record by a specific field value.
 
@@ -189,7 +189,7 @@ class BaseServices:
             commons (CommonsDependencies, optional): Common dependencies for the request. Defaults to None.
 
         Returns:
-            dict: A dictionary representing the retrieved record.
+            list: A list representing the retrieved record.
 
         Raises:
             CoreErrorCode.NotFound: If the record is not found and `ignore_error` is False.
@@ -205,10 +205,10 @@ class BaseServices:
         if ownership_query:
             query.update(ownership_query)
 
-        item = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
-        if not item and not ignore_error:
+        items = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
+        if not items and not ignore_error:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
-        return item
+        return items
 
     async def _check_modified(self, old_data: dict, new_data: dict, ignore_error: bool) -> bool:
         """

@@ -64,7 +64,7 @@ class BaseControllers:
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
-    ) -> dict:
+    ) -> list:
         if not isinstance(self.service, BaseServices):
             raise TypeError(NOT_DECLARED_SERVICE)
         result = await self.service.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)

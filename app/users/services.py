@@ -22,6 +22,10 @@ class UserServices(BaseServices):
             return False
         return True
 
+    async def get_by_email(self, email: str, ignore_error: bool = False) -> dict:
+        results = await self.get_by_field(data=email, field_name="email", ignore_error=ignore_error)
+        return results[0] if results else None
+
     async def register(self, data: schemas.RegisterRequest) -> dict:
         # Set the user role to 'USER' by default.
         data["type"] = value.UserRoles.USER.value
@@ -46,7 +50,7 @@ class UserServices(BaseServices):
         return item
 
     async def login(self, data: schemas.LoginRequest) -> dict:
-        item = await self.get_by_field(data=data["email"], field_name="email", ignore_error=True)
+        item = await self.get_by_email(email=data["email"], ignore_error=True)
         if not item:
             raise UserErrorCode.Unauthorize()
         # Validate the provided password against the hashed value.

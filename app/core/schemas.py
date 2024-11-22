@@ -32,7 +32,7 @@ class CommonsDependencies:
         self.user_type = None
         self.is_public_api = None
         if hasattr(request.state, "payload"):
-            self.current_user =  request.state.payload.get("user_id")
+            self.current_user = request.state.payload.get("user_id")
             self.user_type = request.state.payload.get("user_type")
             self.is_public_api = request.state.payload.get("is_public_api")
 
@@ -79,7 +79,7 @@ class PaginationParams:
         self.limit = limit
         self.fields = fields
         self.sort_by = sort_by
-        self.order_by = order_by
+        self.order_by = order_by.value
 
 
 def check_object_id(value: str) -> str:

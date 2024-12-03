@@ -300,7 +300,7 @@ class BaseServices:
             results.append(item)
         return results
 
-    async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> dict:
+    async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 
@@ -318,12 +318,15 @@ class BaseServices:
         """
         self.ensure_crud_provided()
         item = await self.crud.save_unique(data=data, unique_field=unique_field)
-        if not item and not ignore_error:
-            if isinstance(unique_field, list):
-                unique_value = data[unique_field[0]]
+        if not item:
+            if ignore_error:
+                return False
             else:
-                unique_value = data[unique_field]
-            raise CoreErrorCode.Conflict(service_name=self.service_name, item=unique_value)
+                if isinstance(unique_field, list):
+                    unique_value = data[unique_field[0]]
+                else:
+                    unique_value = data[unique_field]
+                raise CoreErrorCode.Conflict(service_name=self.service_name, item=unique_value)
         result = await self.get_by_id(_id=item)
         return result
 

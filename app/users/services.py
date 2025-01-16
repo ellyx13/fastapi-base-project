@@ -68,8 +68,11 @@ class UserServices(BaseServices):
         data["updated_by"] = self.get_current_user(commons=commons)
         return await self.update_by_id(_id=_id, data=data)
     
-    async def change_type(self, _id: str, type: str):
-        data = {"type": type}
+    async def grant_admin(self, _id: str, commons: CommonsDependencies = None):
+        data = {}
+        data["type"] = value.UserRoles.ADMIN.value
+        data["updated_at"] = self.get_current_datetime()
+        data["updated_by"] = self.get_current_user(commons=commons)
         return await self.update_by_id(_id=_id, data=data)
     
     async def create_admin(self):
@@ -81,8 +84,7 @@ class UserServices(BaseServices):
         data["email"] = settings.default_admin_email
         data["password"] = settings.default_admin_password
         admin = await self.register(data=data)
-        admin = await self.change_type(_id=admin["_id"], type=value.UserRoles.ADMIN.value)
-        return admin
+        return await self.grant_admin(_id=admin["_id"])
 
 
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")

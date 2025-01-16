@@ -5,7 +5,7 @@ from core.services import BaseServices
 from db.base import BaseCRUD
 from db.engine import app_engine
 from utils import value
-
+from .config import settings
 from . import models, schemas
 from .exceptions import ErrorCode as UserErrorCode
 
@@ -67,6 +67,22 @@ class UserServices(BaseServices):
         data["updated_at"] = self.get_current_datetime()
         data["updated_by"] = self.get_current_user(commons=commons)
         return await self.update_by_id(_id=_id, data=data)
+    
+    async def change_type(self, _id: str, type: str):
+        data = {"type": type}
+        return await self.update_by_id(_id=_id, data=data)
+    
+    async def create_admin(self):
+        user = await self.get_by_field(data=settings.default_admin_email, field_name="email", ignore_error=True)
+        if user:
+            return user
+        data = {}
+        data["fullname"] = "Admin"
+        data["email"] = settings.default_admin_email
+        data["password"] = settings.default_admin_password
+        admin = await self.register(data=data)
+        admin = await self.change_type(_id=admin["_id"], type=value.UserRoles.ADMIN.value)
+        return admin
 
 
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")

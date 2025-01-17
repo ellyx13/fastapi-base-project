@@ -14,8 +14,7 @@ class TaskServices(BaseServices):
         data["status"] = "to_do"
         data["created_by"] = self.get_current_user(commons=commons)
         data["created_at"] = self.get_current_datetime()
-        data_save = models.Tasks(**data).model_dump()
-        return await self.save(data=data_save)
+        return await self.save(data=data, model=models.Tasks)
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
         data["updated_by"] = self.get_current_user(commons=commons)

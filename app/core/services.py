@@ -266,26 +266,30 @@ class BaseServices:
         first_item = next(iter(query.values()))
         raise CoreErrorCode.Conflict(service_name=self.service_name, item=first_item)
 
-    async def save(self, data: dict) -> dict:
+    async def save(self, model, data: dict) -> dict:
         """
         Saves a new record to the database.
 
         Args:
+            model: The model class to validate and process the data.
             data (dict): The data to be saved.
 
         Returns:
             dict: The saved record, retrieved by its ID.
         """
         self.ensure_crud_provided()
-        item = await self.crud.save(data=data)
+        # Validate and process the data using the provided model.
+        data_save = model(**data).model_dump(exclude_none=True)
+        item = await self.crud.save(data=data_save)
         result = await self.get_by_id(_id=item)
         return result
 
-    async def save_many(self, data: list) -> list[dict]:
+    async def save_many(self, model, data: list) -> list[dict]:
         """
         Saves multiple records to the database.
 
         Args:
+            model: The model class to validate and process the data.
             data (list): A list of dictionaries, each representing a record to be saved.
 
         Returns:
@@ -293,18 +297,27 @@ class BaseServices:
 
         """
         self.ensure_crud_provided()
-        items = await self.crud.save_many(data=data)
+        # Validate and process each record using the provided model.
+        data_save = [model(**item).model_dump(exclude_none=True) for item in data]
+        items = await self.crud.save_many(data=data_save)
         results = []
         for item_id in items:
             item = await self.get_by_id(_id=item_id)
             results.append(item)
         return results
 
-    async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
+    async def save_unique(
+        self, 
+        model, 
+        data: dict, 
+        unique_field: str | list, 
+        ignore_error: bool = False
+    ) -> bool | dict:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 
         Args:
+            model: The model class to validate and process the data.
             data (dict): The data to be saved.
             unique_field (str | list): The field or fields that must be unique in the database.
             ignore_error (bool, optional): Whether to ignore errors if a conflict is found. Defaults to False.
@@ -314,10 +327,10 @@ class BaseServices:
 
         Raises:
             CoreErrorCode.Conflict: If a conflict is detected and `ignore_error` is False.
-
         """
         self.ensure_crud_provided()
-        item = await self.crud.save_unique(data=data, unique_field=unique_field)
+        data_save = model(**data).model_dump(exclude_none=True)
+        item = await self.crud.save_unique(data=data_save, unique_field=unique_field)
         if not item:
             if ignore_error:
                 return False

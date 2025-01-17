@@ -11,12 +11,21 @@ from loguru import logger
 from middlewares.v1.authentication import AuthenticationMiddleware
 from routers import api_routers
 from users.services import user_services
+from db.engine import Engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create default admin user
     await user_services.create_admin()
-    yield
+
+    # Initialize database connection
+    engine_instance = Engine(database_url=settings.database_url, database_name=settings.app_database_name)
+    
+    try:
+        yield
+    finally:
+        # Close database connection
+        await engine_instance.close()
 
 
 app = FastAPI(

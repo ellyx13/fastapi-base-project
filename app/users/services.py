@@ -3,7 +3,8 @@ from core.schemas import CommonsDependencies
 from core.services import BaseServices
 from db.base import BaseCRUD
 from db.engine import app_engine
-from utils import value, converter
+from utils import value
+from auth.services import authentication_services
 from .config import settings
 from . import models, schemas
 from .exceptions import ErrorCode as UserErrorCode
@@ -23,7 +24,7 @@ class UserServices(BaseServices):
         # Add the current datetime as the creation time.
         data["created_at"] = self.get_current_datetime()
         # Hash the provided password using bcrypt with a generated salt.
-        data["password"] = converter.hash(value=data["password"])
+        data["password"] = authentication_services.hash(value=data["password"])
         # Validate the data by creating an instance of the Users model.
         # This process helps validate fields in data according to validation rules defined in the Users model.
         # Then convert it back to a dictionary for saving.
@@ -45,7 +46,7 @@ class UserServices(BaseServices):
         if not item:
             raise UserErrorCode.Unauthorize()
         # Validate the provided password against the hashed value.
-        is_valid_password = converter.validate_hash(value=data["password"], hashed_value=item["password"])
+        is_valid_password = authentication_services.validate_hash(value=data["password"], hashed_value=item["password"])
         if not is_valid_password:
             raise UserErrorCode.Unauthorize()
 

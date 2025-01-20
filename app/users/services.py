@@ -4,7 +4,6 @@ from core.services import BaseServices
 from db.base import BaseCRUD
 from db.engine import app_engine
 from utils import value
-from auth.services import authentication_services
 from .config import settings
 from . import models, schemas
 from .exceptions import ErrorCode as UserErrorCode

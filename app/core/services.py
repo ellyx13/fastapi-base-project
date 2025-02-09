@@ -23,14 +23,12 @@ class BaseServices:
     Attributes:
         crud (BaseCRUD): The CRUD instance used for database operations.
         service_name (str): The name of the service.
-        maximum_document_limit (int): The maximum number of documents that can be retrieved, as defined in the configuration.
 
     """
 
     def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
         self.crud = crud
         self.service_name = service_name
-        self.maximum_document_limit = config.MAXIMUM_DOCUMENT_LIMIT
         self.ownership_field = config.OWNERSHIP_FIELD
 
     def ensure_crud_provided(self) -> None:
@@ -306,13 +304,7 @@ class BaseServices:
             results.append(item)
         return results
 
-    async def save_unique(
-        self, 
-        model, 
-        data: dict, 
-        unique_field: str | list, 
-        ignore_error: bool = False
-    ) -> bool | dict:
+    async def save_unique(self, model, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 

@@ -19,13 +19,11 @@ class BaseControllers:
     Attributes:
         controller_name (str): The name of the controller.
         service (BaseServices): The service instance used for performing operations.
-        max_record_limit (int): The maximum number of records that can be retrieved, derived from the service's `maximum_document_limit`.
     """
 
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         self.controller_name = controller_name
         self.service = service
-        self.max_record_limit = self.service.maximum_document_limit
 
     async def get_all(
         self,

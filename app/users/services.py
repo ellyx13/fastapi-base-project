@@ -1,5 +1,4 @@
 from auth.services import authentication_services
-from bcrypt import checkpw, gensalt, hashpw
 from core.schemas import CommonsDependencies
 from core.services import BaseServices
 from db.base import BaseCRUD
@@ -14,14 +13,6 @@ class UserServices(BaseServices):
     def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
         super().__init__(service_name, crud)
 
-    async def hash(self, value) -> bytes:
-        return hashpw(value.encode("utf8"), gensalt())
-
-    async def validate_hash(self, value, hashed_value) -> bool:
-        if not checkpw(value.encode("utf-8"), hashed_value):
-            return False
-        return True
-
     async def get_by_email(self, email: str, ignore_error: bool = False) -> dict:
         results = await self.get_by_field(data=email, field_name="email", ignore_error=ignore_error)
         return results[0] if results else None
@@ -32,7 +23,7 @@ class UserServices(BaseServices):
         # Add the current datetime as the creation time.
         data["created_at"] = self.get_current_datetime()
         # Hash the provided password using bcrypt with a generated salt.
-        data["password"] = await self.hash(value=data["password"])
+        data["password"] = await authentication_services.hash(value=data["password"])
         # Save the user, ensuring the email is unique, using the save_unique function.
         item = await self.save_unique(data=data, unique_field="email", model=models.Users)
         # Update created_by after register to preserve query ownership logic
@@ -48,7 +39,7 @@ class UserServices(BaseServices):
         if not item:
             raise UserErrorCode.Unauthorize()
         # Validate the provided password against the hashed value.
-        is_valid_password = await self.validate_hash(value=data["password"], hashed_value=item["password"])
+        is_valid_password = await authentication_services.validate_hash(value=data["password"], hashed_value=item["password"])
         if not is_valid_password:
             raise UserErrorCode.Unauthorize()
 

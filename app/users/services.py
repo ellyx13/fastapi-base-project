@@ -7,7 +7,7 @@ from utils import value
 
 from . import models, schemas
 from .config import settings
-from .exceptions import ErrorCode as UserErrorCode
+from .exceptions import UserErrorCode
 
 
 class UserServices(BaseServices):

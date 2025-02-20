@@ -2,10 +2,11 @@ from datetime import datetime
 
 from db.base import BaseCRUD
 from pydantic import BaseModel
+from pydantic._internal._model_construction import ModelMetaclass
 from utils import value
 
 from . import config
-from .exceptions import ErrorCode as CoreErrorCode
+from .exceptions import CoreErrorCode
 from .schemas import CommonsDependencies
 
 
@@ -32,7 +33,8 @@ class BaseServices:
         self.ownership_field = config.OWNERSHIP_FIELD
         if crud and not isinstance(crud, BaseCRUD):
             raise ValueError(f"The 'crud' attribute must be a BaseCRUD instance for {self.service_name} service.")
-        if model and isinstance(model, BaseModel) is False:
+        print(type(model))
+        if model and isinstance(model, ModelMetaclass) is False:
             raise ValueError(f"The 'model' attribute must be a Pydantic model for {self.service_name} service.")
         self.crud = crud
         self.model = model

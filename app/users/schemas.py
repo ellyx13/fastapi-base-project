@@ -5,7 +5,7 @@ from core.schemas import EmailStr, PhoneStr
 from pydantic import BaseModel, Field, field_validator
 
 from .config import settings
-from .exceptions import ErrorCode as UserErrorCode
+from .exceptions import UserErrorCode
 
 
 class RegisterRequest(BaseModel):

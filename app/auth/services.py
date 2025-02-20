@@ -3,11 +3,10 @@ from datetime import datetime
 from bcrypt import checkpw, gensalt, hashpw
 from core.services import BaseServices
 from db.base import BaseCRUD
-from fastapi import Request
 from jose import jwt
 from utils import calculator, converter
 
-from .config import PUBLIC_APIS, settings
+from .config import settings
 
 
 class AuthServices(BaseServices):
@@ -53,22 +52,6 @@ class AuthServices(BaseServices):
             return payload
         except Exception:
             return False
-
-    async def check_public_api(self, request: Request) -> bool:
-        """
-        Checks if the API being accessed is a public API.
-
-        Args:
-            request (Request): The FastAPI request object.
-
-        Returns:
-            bool: True if the API path is listed as a public API, False otherwise.
-
-        """
-        api_path = request.url.path
-        if api_path in PUBLIC_APIS:
-            return True
-        return False
 
     async def hash(self, value) -> bytes:
         """

@@ -1,7 +1,7 @@
 from exceptions import CustomException
 
 
-class ErrorCode:
+class CoreErrorCode:
     @staticmethod
     def NotFound(service_name: str, item: str):
         return CustomException(type=f"{service_name}/warning/not-found", status=404, title="Not found.", detail=f"{service_name.capitalize()} with {item} could not be found.")

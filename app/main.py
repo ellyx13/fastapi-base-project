@@ -1,5 +1,6 @@
 import sys
 from contextlib import asynccontextmanager
+
 from config import settings
 from exceptions import CustomException
 from fastapi import FastAPI, Request, Response
@@ -8,9 +9,10 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from loguru import logger
-from middlewares.v1.authentication import AuthenticationMiddleware
+from middlewares.v1.log import LogMiddleware
 from routers import api_routers
 from users.services import user_services
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,7 +39,7 @@ app = FastAPI(
 
 
 # Middlewares
-app.add_middleware(AuthenticationMiddleware)
+app.add_middleware(LogMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin,

@@ -6,7 +6,7 @@ from pydantic.functional_validators import AfterValidator
 from utils import validator
 from utils.value import OrderBy, UserRoles
 
-from .exceptions import ErrorCode as CoreErrorCode
+from .exceptions import CoreErrorCode
 
 
 class CommonsDependencies:

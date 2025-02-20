@@ -19,8 +19,9 @@ class access_control:
         admin (bool): Indicates whether the method should be restricted to admin users.
     """
 
-    def __init__(cls, admin: bool = False) -> None:
+    def __init__(cls, admin: bool = False, public: bool = False) -> None:
         cls.admin = admin
+        cls.public = public
 
     def __call__(cls, function) -> Callable[..., Any]:
         @functools.wraps(function)

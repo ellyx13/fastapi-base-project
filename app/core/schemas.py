@@ -31,6 +31,8 @@ class CommonsDependencies:
         self.current_user = None
         self.user_type = None
         self.is_public_api = None
+        self.api_path = request.url.path
+        self.headers = dict(request.headers)
         if hasattr(request.state, "payload"):
             self.current_user = request.state.payload.get("user_id")
             self.user_type = request.state.payload.get("user_type")

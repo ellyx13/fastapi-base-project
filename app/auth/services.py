@@ -42,7 +42,6 @@ class AuthServices(BaseServices):
 
         """
         try:
-            token = token.split(" ")[1]
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
             datetime_obj = converter.convert_str_to_datetime(datetime_str=payload["expire"])
             if datetime.now() > datetime_obj:

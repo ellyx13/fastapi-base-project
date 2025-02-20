@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from db.base import BaseCRUD
+from pydantic import BaseModel
 from utils import value
 
 from . import config
@@ -264,7 +265,7 @@ class BaseServices:
         first_item = next(iter(query.values()))
         raise CoreErrorCode.Conflict(service_name=self.service_name, item=first_item)
 
-    async def save(self, model, data: dict) -> dict:
+    async def save(self, data: dict, model: type[BaseModel]) -> dict:
         """
         Saves a new record to the database.
 
@@ -282,7 +283,7 @@ class BaseServices:
         result = await self.get_by_id(_id=item)
         return result
 
-    async def save_many(self, model, data: list) -> list[dict]:
+    async def save_many(self, data: list, model: type[BaseModel]) -> list[dict]:
         """
         Saves multiple records to the database.
 
@@ -304,7 +305,7 @@ class BaseServices:
             results.append(item)
         return results
 
-    async def save_unique(self, model, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
+    async def save_unique(self, data: dict, unique_field: str | list, model: type[BaseModel], ignore_error: bool = False) -> bool | dict:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 

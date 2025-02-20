@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from main import app
 
 from tests.config import settings
@@ -12,6 +12,6 @@ def anyio_backend():
 
 @pytest.fixture(scope="session")
 async def client():
-    async with AsyncClient(app=app, base_url=settings.base_url) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=settings.base_url) as client:
         print("Client is ready")
         yield client

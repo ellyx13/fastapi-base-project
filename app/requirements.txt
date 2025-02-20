@@ -13,3 +13,4 @@ python-dateutil==2.9.0.post0
 # For test
 pytest==8.3.2
 pytest-asyncio==0.23.8
+httpx==0.28.1

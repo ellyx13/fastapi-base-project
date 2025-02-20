@@ -4,7 +4,8 @@ import pytest
 from auth.services import auth_services
 from bcrypt import gensalt, hashpw
 from exceptions import CustomException
-from users.exceptions import ErrorCode as UserErrorCode
+from users.exceptions import UserErrorCode
+from users.models import Users
 from users.schemas import LoginRequest, RegisterRequest
 from users.services import UserServices
 
@@ -13,7 +14,7 @@ service_name = "users"
 
 @pytest.fixture
 def user_services():
-    return UserServices(service_name=service_name, crud=AsyncMock())
+    return UserServices(service_name=service_name, crud=AsyncMock(), model=Users)
 
 
 @pytest.mark.asyncio
@@ -65,7 +66,7 @@ async def test_login_invalid_password(user_services):
     mock_request_data = LoginRequest(**mock_login_data).model_dump()
     mock_user = [{"_id": "user_id", "email": "test@example.com", "type": "user", "password": hashpw(mock_login_data["password"].encode("utf-8"), gensalt())}]
 
-    with patch.object(user_services, "get_by_field", AsyncMock(return_value=mock_user)), patch.object(user_services, "validate_hash", AsyncMock(side_effect=UserErrorCode.Unauthorize())):
+    with patch.object(user_services, "get_by_field", AsyncMock(return_value=mock_user)), patch.object(auth_services, "validate_hash", AsyncMock(side_effect=UserErrorCode.Unauthorize())):
         with pytest.raises(CustomException) as exc:
             await user_services.login(data=mock_request_data)
 

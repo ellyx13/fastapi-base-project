@@ -32,8 +32,8 @@ class RoutersCBV:
         results = await user_controllers.get_me(commons=self.commons, fields=fields)
         return schemas.Response(**results)
 
-    @access_control(admin=True)
     @router.get("/users", status_code=200, responses={200: {"model": schemas.ListResponse, "description": "Get users success"}})
+    @access_control(admin=True)
     async def get_all(self, pagination: PaginationParams = Depends()):
         search_in = ["fullname", "email"]
         results = await user_controllers.get_all(
@@ -51,7 +51,7 @@ class RoutersCBV:
             return results
         return schemas.ListResponse(**results)
 
-    @router.get("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Get users success"}})
+    @router.get("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Get user success"}})
     async def get_detail(self, _id: ObjectIdStr, fields: str = None):
         results = await user_controllers.get_by_id(_id=_id, fields_limit=fields, commons=self.commons)
         if fields:
@@ -76,5 +76,4 @@ class RoutersCBV:
     @router.delete("/users/{_id}", status_code=204)
     @access_control(admin=True)
     async def delete(self, _id: ObjectIdStr):
-        results = await user_controllers.soft_delete_by_id(_id=_id, commons=self.commons)
-        return schemas.Response(**results)
+        await user_controllers.soft_delete_by_id(_id=_id, commons=self.commons)

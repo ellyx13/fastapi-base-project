@@ -7,14 +7,14 @@ from . import models, schemas
 
 
 class TaskServices(BaseServices):
-    def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
-        super().__init__(service_name, crud)
+    def __init__(self, service_name, crud=None, model=None):
+        super().__init__(service_name, crud, model)
 
     async def create(self, data: schemas.CreateRequest, commons: CommonsDependencies) -> dict:
         data["status"] = "to_do"
         data["created_by"] = self.get_current_user(commons=commons)
         data["created_at"] = self.get_current_datetime()
-        return await self.save(data=data, model=models.Tasks)
+        return await self.save(data=data)
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
         data["updated_by"] = self.get_current_user(commons=commons)
@@ -23,4 +23,4 @@ class TaskServices(BaseServices):
 
 
 task_crud = BaseCRUD(database_engine=app_engine, collection="tasks")
-task_services = TaskServices(service_name="tasks", crud=task_crud)
+task_services = TaskServices(service_name="tasks", crud=task_crud, model=models.Tasks)

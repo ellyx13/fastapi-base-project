@@ -11,8 +11,8 @@ from .exceptions import ErrorCode as UserErrorCode
 
 
 class UserServices(BaseServices):
-    def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
-        super().__init__(service_name, crud)
+    def __init__(self, service_name, crud=None, model=None):
+        super().__init__(service_name, crud, model)
 
     async def get_by_email(self, email: str, ignore_error: bool = False) -> dict:
         results = await self.get_by_field(data=email, field_name="email", ignore_error=ignore_error)
@@ -26,7 +26,7 @@ class UserServices(BaseServices):
         # Hash the provided password using bcrypt with a generated salt.
         data["password"] = await auth_services.hash(value=data["password"])
         # Save the user, ensuring the email is unique, using the save_unique function.
-        item = await self.save_unique(data=data, unique_field="email", model=models.Users)
+        item = await self.save_unique(data=data, unique_field="email")
         # Update created_by after register to preserve query ownership logic
         data_update = {"created_by": item["_id"]}
         item = await self.update_by_id(_id=item["_id"], data=data_update)
@@ -74,4 +74,4 @@ class UserServices(BaseServices):
 
 
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")
-user_services = UserServices(service_name="users", crud=user_crud)
+user_services = UserServices(service_name="users", crud=user_crud, model=models.Users)

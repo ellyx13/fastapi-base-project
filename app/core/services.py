@@ -27,10 +27,15 @@ class BaseServices:
 
     """
 
-    def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
-        self.crud = crud
+    def __init__(self, service_name: str, crud: BaseCRUD = None, model: BaseModel = None) -> None:
         self.service_name = service_name
         self.ownership_field = config.OWNERSHIP_FIELD
+        if crud and not isinstance(crud, BaseCRUD):
+            raise ValueError(f"The 'crud' attribute must be a BaseCRUD instance for {self.service_name} service.")
+        if model and isinstance(model, BaseModel) is False:
+            raise ValueError(f"The 'model' attribute must be a Pydantic model for {self.service_name} service.")
+        self.crud = crud
+        self.model = model
 
     def ensure_crud_provided(self) -> None:
         if self.crud is None:
@@ -265,12 +270,11 @@ class BaseServices:
         first_item = next(iter(query.values()))
         raise CoreErrorCode.Conflict(service_name=self.service_name, item=first_item)
 
-    async def save(self, data: dict, model: type[BaseModel]) -> dict:
+    async def save(self, data: dict) -> dict:
         """
         Saves a new record to the database.
 
         Args:
-            model: The model class to validate and process the data.
             data (dict): The data to be saved.
 
         Returns:
@@ -278,17 +282,16 @@ class BaseServices:
         """
         self.ensure_crud_provided()
         # Validate and process the data using the provided model.
-        data_save = model(**data).model_dump(exclude_none=True)
+        data_save = self.model(**data).model_dump(exclude_none=True)
         item = await self.crud.save(data=data_save)
         result = await self.get_by_id(_id=item)
         return result
 
-    async def save_many(self, data: list, model: type[BaseModel]) -> list[dict]:
+    async def save_many(self, data: list) -> list[dict]:
         """
         Saves multiple records to the database.
 
         Args:
-            model: The model class to validate and process the data.
             data (list): A list of dictionaries, each representing a record to be saved.
 
         Returns:
@@ -297,7 +300,7 @@ class BaseServices:
         """
         self.ensure_crud_provided()
         # Validate and process each record using the provided model.
-        data_save = [model(**item).model_dump(exclude_none=True) for item in data]
+        data_save = [self.model(**item).model_dump(exclude_none=True) for item in data]
         items = await self.crud.save_many(data=data_save)
         results = []
         for item_id in items:
@@ -305,12 +308,11 @@ class BaseServices:
             results.append(item)
         return results
 
-    async def save_unique(self, data: dict, unique_field: str | list, model: type[BaseModel], ignore_error: bool = False) -> bool | dict:
+    async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 
         Args:
-            model: The model class to validate and process the data.
             data (dict): The data to be saved.
             unique_field (str | list): The field or fields that must be unique in the database.
             ignore_error (bool, optional): Whether to ignore errors if a conflict is found. Defaults to False.
@@ -322,7 +324,7 @@ class BaseServices:
             CoreErrorCode.Conflict: If a conflict is detected and `ignore_error` is False.
         """
         self.ensure_crud_provided()
-        data_save = model(**data).model_dump(exclude_none=True)
+        data_save = self.model(**data).model_dump(exclude_none=True)
         item = await self.crud.save_unique(data=data_save, unique_field=unique_field)
         if not item:
             if ignore_error:

@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from bcrypt import checkpw, gensalt, hashpw
 from core.services import BaseServices
 from db.base import BaseCRUD
@@ -9,7 +10,7 @@ from utils import calculator, converter
 from .config import PUBLIC_APIS, settings
 
 
-class AuthenticationServices(BaseServices):
+class AuthServices(BaseServices):
     def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
         super().__init__(service_name, crud)
 
@@ -68,7 +69,7 @@ class AuthenticationServices(BaseServices):
         if api_path in PUBLIC_APIS:
             return True
         return False
-    
+
     async def hash(self, value) -> bytes:
         """
         Hashes a given string using bcrypt.
@@ -97,4 +98,4 @@ class AuthenticationServices(BaseServices):
         return True
 
 
-authentication_services = AuthenticationServices(service_name="authentication")
+auth_services = AuthServices(service_name="auth")

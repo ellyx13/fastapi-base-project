@@ -1,11 +1,12 @@
-from auth.services import authentication_services
+from auth.services import auth_services
 from core.schemas import CommonsDependencies
 from core.services import BaseServices
 from db.base import BaseCRUD
 from db.engine import app_engine
 from utils import value
-from .config import settings
+
 from . import models, schemas
+from .config import settings
 from .exceptions import ErrorCode as UserErrorCode
 
 
@@ -23,14 +24,14 @@ class UserServices(BaseServices):
         # Add the current datetime as the creation time.
         data["created_at"] = self.get_current_datetime()
         # Hash the provided password using bcrypt with a generated salt.
-        data["password"] = await authentication_services.hash(value=data["password"])
+        data["password"] = await auth_services.hash(value=data["password"])
         # Save the user, ensuring the email is unique, using the save_unique function.
         item = await self.save_unique(data=data, unique_field="email", model=models.Users)
         # Update created_by after register to preserve query ownership logic
         data_update = {"created_by": item["_id"]}
         item = await self.update_by_id(_id=item["_id"], data=data_update)
         # Generate an access token for the user.
-        item["access_token"] = await authentication_services.create_access_token(user_id=item["_id"], user_type=item["type"])
+        item["access_token"] = await auth_services.create_access_token(user_id=item["_id"], user_type=item["type"])
         item["token_type"] = "bearer"
         return item
 
@@ -39,12 +40,12 @@ class UserServices(BaseServices):
         if not item:
             raise UserErrorCode.Unauthorize()
         # Validate the provided password against the hashed value.
-        is_valid_password = await authentication_services.validate_hash(value=data["password"], hashed_value=item["password"])
+        is_valid_password = await auth_services.validate_hash(value=data["password"], hashed_value=item["password"])
         if not is_valid_password:
             raise UserErrorCode.Unauthorize()
 
         # Generate an access token for the user.
-        item["access_token"] = await authentication_services.create_access_token(user_id=item["_id"], user_type=item["type"])
+        item["access_token"] = await auth_services.create_access_token(user_id=item["_id"], user_type=item["type"])
         item["token_type"] = "bearer"
         return item
 
@@ -52,14 +53,14 @@ class UserServices(BaseServices):
         data["updated_at"] = self.get_current_datetime()
         data["updated_by"] = self.get_current_user(commons=commons)
         return await self.update_by_id(_id=_id, data=data)
-    
+
     async def grant_admin(self, _id: str, commons: CommonsDependencies = None):
         data = {}
         data["type"] = value.UserRoles.ADMIN.value
         data["updated_at"] = self.get_current_datetime()
         data["updated_by"] = self.get_current_user(commons=commons)
         return await self.update_by_id(_id=_id, data=data)
-    
+
     async def create_admin(self):
         user = await self.get_by_field(data=settings.default_admin_email, field_name="email", ignore_error=True)
         if user:

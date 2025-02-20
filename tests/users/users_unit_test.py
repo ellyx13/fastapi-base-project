@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from auth.services import authentication_services
+from auth.services import auth_services
 from bcrypt import gensalt, hashpw
 from exceptions import CustomException
 from users.exceptions import ErrorCode as UserErrorCode
@@ -23,7 +23,7 @@ async def test_register_success(user_services):
 
     with patch.object(user_services, "save_unique", AsyncMock(return_value={"_id": "user_id", "type": "user"})), patch.object(
         user_services, "update_by_id", AsyncMock(return_value={"_id": "user_id", "type": "user"})
-    ), patch.object(authentication_services, "create_access_token", AsyncMock(return_value="fake_token")):
+    ), patch.object(auth_services, "create_access_token", AsyncMock(return_value="fake_token")):
         result = await user_services.register(data=mock_request_data)
 
         assert result["_id"] == "user_id"
@@ -51,7 +51,7 @@ async def test_login_success(user_services):
     mock_request_data = LoginRequest(**mock_login_data).model_dump()
     mock_user = [{"_id": "user_id", "email": "test@example.com", "type": "user", "password": hashpw(mock_login_data["password"].encode("utf-8"), gensalt())}]
 
-    with patch.object(user_services, "get_by_field", AsyncMock(return_value=mock_user)), patch.object(authentication_services, "create_access_token", AsyncMock(return_value="fake_token")):
+    with patch.object(user_services, "get_by_field", AsyncMock(return_value=mock_user)), patch.object(auth_services, "create_access_token", AsyncMock(return_value="fake_token")):
         result = await user_services.login(data=mock_request_data)
 
         assert result["_id"] == "user_id"

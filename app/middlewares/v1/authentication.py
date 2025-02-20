@@ -1,4 +1,4 @@
-from auth.services import authentication_services
+from auth.services import auth_services
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .exceptions import ErrorCode as MiddlewareErrorCode
@@ -9,14 +9,14 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request, call_next):
-        is_public_api = await authentication_services.check_public_api(request=request)
+        is_public_api = await auth_services.check_public_api(request=request)
         if is_public_api:
             request.state.payload = {"is_public_api": True}
         else:
             token = request.headers.get("Authorization")
             if not token:
                 return MiddlewareErrorCode.Unauthorize()
-            payload = await authentication_services.validate_access_token(token=token)
+            payload = await auth_services.validate_access_token(token=token)
             if not payload:
                 return MiddlewareErrorCode.Unauthorize()
             request.state.payload = payload

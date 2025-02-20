@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Query, Request
 from pydantic.functional_validators import AfterValidator
 from utils import validator
-from utils.value import OrderBy
+from utils.value import OrderBy, UserRoles
 
 from .exceptions import ErrorCode as CoreErrorCode
 
@@ -35,6 +35,15 @@ class CommonsDependencies:
             self.current_user = request.state.payload.get("user_id")
             self.user_type = request.state.payload.get("user_type")
             self.is_public_api = request.state.payload.get("is_public_api")
+
+    def is_admin(self) -> bool:
+        """
+        Checks if the current user is an admin.
+
+        Returns:
+            bool: True if the current user is an admin, False otherwise.
+        """
+        return self.user_type == UserRoles.ADMIN.value if self.user_type else False
 
 
 class PaginationParams:

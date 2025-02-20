@@ -19,13 +19,11 @@ class BaseControllers:
     Attributes:
         controller_name (str): The name of the controller.
         service (BaseServices): The service instance used for performing operations.
-        max_record_limit (int): The maximum number of records that can be retrieved, derived from the service's `maximum_document_limit`.
     """
 
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         self.controller_name = controller_name
         self.service = service
-        self.max_record_limit = self.service.maximum_document_limit
 
     async def get_all(
         self,
@@ -64,7 +62,7 @@ class BaseControllers:
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
-    ) -> dict:
+    ) -> list:
         if not isinstance(self.service, BaseServices):
             raise TypeError(NOT_DECLARED_SERVICE)
         result = await self.service.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)

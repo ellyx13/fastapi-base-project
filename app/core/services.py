@@ -23,14 +23,12 @@ class BaseServices:
     Attributes:
         crud (BaseCRUD): The CRUD instance used for database operations.
         service_name (str): The name of the service.
-        maximum_document_limit (int): The maximum number of documents that can be retrieved, as defined in the configuration.
 
     """
 
     def __init__(self, service_name: str, crud: BaseCRUD = None) -> None:
         self.crud = crud
         self.service_name = service_name
-        self.maximum_document_limit = config.MAXIMUM_DOCUMENT_LIMIT
         self.ownership_field = config.OWNERSHIP_FIELD
 
     def ensure_crud_provided(self) -> None:
@@ -55,7 +53,7 @@ class BaseServices:
             str: The ID of the current user.
 
         """
-        return commons.current_user
+        return commons.current_user if commons else None
 
     def get_current_user_type(self, commons: CommonsDependencies):
         """
@@ -68,7 +66,7 @@ class BaseServices:
             str: The type of the current user (e.g., admin, customer).
 
         """
-        return commons.user_type
+        return commons.user_type if commons else None
 
     def build_ownership_query(self, commons: CommonsDependencies = None) -> dict | None:
         """
@@ -176,7 +174,7 @@ class BaseServices:
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
-    ) -> dict:
+    ) -> list:
         """
         Retrieves a record by a specific field value.
 
@@ -189,7 +187,7 @@ class BaseServices:
             commons (CommonsDependencies, optional): Common dependencies for the request. Defaults to None.
 
         Returns:
-            dict: A dictionary representing the retrieved record.
+            list: A list representing the retrieved record.
 
         Raises:
             CoreErrorCode.NotFound: If the record is not found and `ignore_error` is False.
@@ -205,10 +203,10 @@ class BaseServices:
         if ownership_query:
             query.update(ownership_query)
 
-        item = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
-        if not item and not ignore_error:
+        items = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
+        if not items and not ignore_error:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
-        return item
+        return items
 
     async def _check_modified(self, old_data: dict, new_data: dict, ignore_error: bool) -> bool:
         """
@@ -266,26 +264,30 @@ class BaseServices:
         first_item = next(iter(query.values()))
         raise CoreErrorCode.Conflict(service_name=self.service_name, item=first_item)
 
-    async def save(self, data: dict) -> dict:
+    async def save(self, model, data: dict) -> dict:
         """
         Saves a new record to the database.
 
         Args:
+            model: The model class to validate and process the data.
             data (dict): The data to be saved.
 
         Returns:
             dict: The saved record, retrieved by its ID.
         """
         self.ensure_crud_provided()
-        item = await self.crud.save(data=data)
+        # Validate and process the data using the provided model.
+        data_save = model(**data).model_dump(exclude_none=True)
+        item = await self.crud.save(data=data_save)
         result = await self.get_by_id(_id=item)
         return result
 
-    async def save_many(self, data: list) -> list[dict]:
+    async def save_many(self, model, data: list) -> list[dict]:
         """
         Saves multiple records to the database.
 
         Args:
+            model: The model class to validate and process the data.
             data (list): A list of dictionaries, each representing a record to be saved.
 
         Returns:
@@ -293,18 +295,21 @@ class BaseServices:
 
         """
         self.ensure_crud_provided()
-        items = await self.crud.save_many(data=data)
+        # Validate and process each record using the provided model.
+        data_save = [model(**item).model_dump(exclude_none=True) for item in data]
+        items = await self.crud.save_many(data=data_save)
         results = []
         for item_id in items:
             item = await self.get_by_id(_id=item_id)
             results.append(item)
         return results
 
-    async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> dict:
+    async def save_unique(self, model, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 
         Args:
+            model: The model class to validate and process the data.
             data (dict): The data to be saved.
             unique_field (str | list): The field or fields that must be unique in the database.
             ignore_error (bool, optional): Whether to ignore errors if a conflict is found. Defaults to False.
@@ -314,16 +319,19 @@ class BaseServices:
 
         Raises:
             CoreErrorCode.Conflict: If a conflict is detected and `ignore_error` is False.
-
         """
         self.ensure_crud_provided()
-        item = await self.crud.save_unique(data=data, unique_field=unique_field)
-        if not item and not ignore_error:
-            if isinstance(unique_field, list):
-                unique_value = data[unique_field[0]]
+        data_save = model(**data).model_dump(exclude_none=True)
+        item = await self.crud.save_unique(data=data_save, unique_field=unique_field)
+        if not item:
+            if ignore_error:
+                return False
             else:
-                unique_value = data[unique_field]
-            raise CoreErrorCode.Conflict(service_name=self.service_name, item=unique_value)
+                if isinstance(unique_field, list):
+                    unique_value = data[unique_field[0]]
+                else:
+                    unique_value = data[unique_field]
+                raise CoreErrorCode.Conflict(service_name=self.service_name, item=unique_value)
         result = await self.get_by_id(_id=item)
         return result
 

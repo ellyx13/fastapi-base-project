@@ -12,14 +12,14 @@ class BaseCRUD:
         if collection:
             self.collection = self.database[collection]
             self.collection_name = collection
-            
+
     async def set_collection(self, collection: str):
         self.collection = self.database[collection]
         self.collection_name = collection
-        
+
     async def count_documents(self, query: dict = None) -> int:
         return await self.collection.count_documents(filter=query)
-    
+
     async def convert_object_id_to_string(self, document: dict):
         if document.get("_id") is None:
             return document
@@ -29,11 +29,11 @@ class BaseCRUD:
     async def build_field_projection(self, fields_limit: list | str = None) -> dict:
         """
         Constructs a MongoDB field projection dictionary from a comma-separated string.
-    
+
         Args:
             fields_limit (list | str): A list or string of field names to include in the projection.
                                 For example, ["name", "age", "address"], "name,age,address".
-    
+
         Returns:
             dict: A dictionary where keys are field names and values are 1, indicating the fields to include
                   in the MongoDB query results. If no fields are specified, an empty dictionary is returned.
@@ -47,7 +47,7 @@ class BaseCRUD:
             field = field.strip()
             fields[field] = 1
         return fields
-    
+
     def convert_bools(self, value: dict | list | str) -> dict | list | str:
         """
         Converts string representations of booleans ("true" or "false") to actual boolean values (True, False) in a given data structure.
@@ -72,11 +72,11 @@ class BaseCRUD:
     def replace_special_chars(self, value: dict | str) -> dict | str:
         """
         Escapes special characters in strings within a given dictionary or string.
-        
-        
-        This function finds special characters that have specific meanings in regular expressions 
+
+
+        This function finds special characters that have specific meanings in regular expressions
         (e.g., *, +, ?, ^, $, {, }, (, ), |, [, ], \\) and escapes them by prefixing them with a backslash.
-        This is useful when these characters need to be used in regular expression patterns or in other contexts 
+        This is useful when these characters need to be used in regular expression patterns or in other contexts
         where they should be treated as literal characters.
 
         Args:
@@ -108,14 +108,13 @@ class BaseCRUD:
         document = await self.collection.insert_one(document=data)
         return str(document.inserted_id)
 
-
     async def save_many(self, data: list) -> list | None:
         """
         Inserts multiple documents into the collection.
-        
+
         Args:
             data (list): A list of documents to be inserted into the collection.
-            
+
         Returns:
             bool: True if the insertion was successful, False otherwise.
         """
@@ -130,19 +129,19 @@ class BaseCRUD:
     async def save_unique(self, data: dict, unique_field: list | str) -> str | bool:
         """
         Saves a document into the collection if it does not already exist based on unique fields.
-        
+
         Args:
             data (dict): The document to be inserted into the collection.
             unique_field (list | str): The field or list of fields that should be unique.
                                        If a document with the same values for these fields exists,
                                        the new document will not be inserted.
-                                       
+
         Returns:
             str | bool: The ID of the inserted document as a string if insertion is successful,
                         False if a document with the same unique fields already exists.
         """
         is_exist = True
-        
+
         if isinstance(unique_field, list):
             query = {}
             for key in data.keys():
@@ -155,10 +154,10 @@ class BaseCRUD:
             raise ValueError("The type of unique_field must be list or str")
         if is_exist:
             return False
-        
+
         result = await self.save(data=data)
         return result
-    
+
     async def aggregate_by_pipeline(self, pipeline: list) -> list:
         """
         Executes an aggregation pipeline on the collection.
@@ -185,17 +184,17 @@ class BaseCRUD:
             query (dict, optional): Additional query criteria for the update operation.
 
         Returns:
-            bool: True if the document was successfully updated (i.e., at least one field was modified), 
+            bool: True if the document was successfully updated (i.e., at least one field was modified),
                   False if no changes were made to the document or the document did not exist.
         """
         if not query:
             query = {}
         query.update({"_id": ObjectId(_id)})
         result = await self.collection.update_one(filter=query, update={"$set": data}, upsert=False)
-        
-        # The return statement `return update_result.modified_count > 0` checks if the number of documents 
-        # modified by the update operation is greater than zero. If at least one document was modified, 
-        # it returns True, indicating a successful update. If no documents were modified (either because 
+
+        # The return statement `return update_result.modified_count > 0` checks if the number of documents
+        # modified by the update operation is greater than zero. If at least one document was modified,
+        # it returns True, indicating a successful update. If no documents were modified (either because
         # the document did not exist or the data provided did not change any fields), it returns False.
         return result.modified_count > 0
 
@@ -215,7 +214,7 @@ class BaseCRUD:
         query.update({"_id": ObjectId(_id)})
         result = await self.collection.delete_one(filter=query)
         return result.deleted_count > 0
-    
+
     async def delete_field_by_id(self, _id: str, field_name: str | list) -> bool:
         """
         Deletes specified fields from a document in the collection based on the document's ID.
@@ -233,7 +232,6 @@ class BaseCRUD:
         data = {field: 1 for field in field_name}
         result = await self.collection.update_one(filter=query, update={"$unset": data})
         return result.modified_count > 0
-
 
     async def get_by_id(self, _id, fields_limit: list = None, query: dict = None) -> dict | None:
         """
@@ -259,7 +257,7 @@ class BaseCRUD:
         result = await self.convert_object_id_to_string(document=result)
         return result
 
-    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, query: dict = None) -> dict | None:
+    async def get_by_field(self, data: str, field_name: str, fields_limit: list = None, query: dict = None) -> list | None:
         """
         Retrieves a document from the collection based on a specific field value, with optional field limitations and additional query.
 
@@ -271,33 +269,7 @@ class BaseCRUD:
             query (dict, optional): Additional query criteria to further refine the search.
 
         Returns:
-            dict | None: The retrieved document with `_id` converted to a string, or None if no document is found.
-        """
-        fields_limit = await self.build_field_projection(fields_limit=fields_limit)
-        if not query:
-            query = {}
-        query.update({field_name: data})
-        query = self.replace_special_chars(value=query)
-        result = await self.collection.find_one(filter=query, projection=fields_limit)
-        if not result:
-            return None
-        result = await self.convert_object_id_to_string(document=result)
-        return result
-
-    async def get_all_by_field(self, data: str, field_name: str, fields_limit: list = None, query: dict = None) -> list | None:
-        """
-        Retrieves all documents from the collection that match a specific field value, with optional field limitations and additional query.
-
-        Args:
-            data (str): The value to search for in the specified field.
-            field_name (str): The name of the field to search in.
-            fields_limit (str, optional): A comma-separated string of field names to include in the results.
-                                          If None, all fields are included.
-            query (dict, optional): Additional query criteria to further refine the search.
-
-        Returns:
-            list | None: A list of dictionaries representing the retrieved documents with `_id` converted to a string,
-                         or None if no documents are found.
+            list | None: The list retrieved document with `_id` converted to a string.
         """
         fields_limit = await self.build_field_projection(fields_limit=fields_limit)
         if not query:
@@ -305,15 +277,15 @@ class BaseCRUD:
         query.update({field_name: data})
         query = self.replace_special_chars(value=query)
         documents = self.collection.find(filter=query, projection=fields_limit)
-        if not documents:
-            return None
         results = []
         async for document in documents:
             document = await self.convert_object_id_to_string(document=document)
             results.append(document)
-        return results
+        return results if results else None
 
-    async def get_all(self, query: dict = None, search: str = None, search_in: list = None, page: int = None, limit: int = None, fields_limit: list = None, sort_by: str = None, order_by: str = None) -> dict:
+    async def get_all(
+        self, query: dict = None, search: str = None, search_in: list = None, page: int = None, limit: int = None, fields_limit: list = None, sort_by: str = None, order_by: str = None
+    ) -> dict:
         """
         Retrieves all documents from the collection based on various query, pagination, sorting, and field limitations.
 

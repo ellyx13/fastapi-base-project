@@ -49,7 +49,7 @@ async def test_register_duplicate_email(user_services):
 async def test_login_success(user_services):
     mock_login_data = {"email": "test@example.com", "password": "password123"}
     mock_request_data = LoginRequest(**mock_login_data).model_dump()
-    mock_user = {"_id": "user_id", "email": "test@example.com", "type": "user", "password": hashpw(mock_login_data["password"].encode("utf-8"), gensalt())}
+    mock_user = [{"_id": "user_id", "email": "test@example.com", "type": "user", "password": hashpw(mock_login_data["password"].encode("utf-8"), gensalt())}]
 
     with patch.object(user_services, "get_by_field", AsyncMock(return_value=mock_user)), patch.object(authentication_services, "create_access_token", AsyncMock(return_value="fake_token")):
         result = await user_services.login(data=mock_request_data)
@@ -63,7 +63,7 @@ async def test_login_success(user_services):
 async def test_login_invalid_password(user_services):
     mock_login_data = {"email": "test@example.com", "password": "wrongpassword"}
     mock_request_data = LoginRequest(**mock_login_data).model_dump()
-    mock_user = {"_id": "user_id", "email": "test@example.com", "type": "user", "password": hashpw(mock_login_data["password"].encode("utf-8"), gensalt())}
+    mock_user = [{"_id": "user_id", "email": "test@example.com", "type": "user", "password": hashpw(mock_login_data["password"].encode("utf-8"), gensalt())}]
 
     with patch.object(user_services, "get_by_field", AsyncMock(return_value=mock_user)), patch.object(user_services, "validate_hash", AsyncMock(side_effect=UserErrorCode.Unauthorize())):
         with pytest.raises(CustomException) as exc:

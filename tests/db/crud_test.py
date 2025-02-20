@@ -87,14 +87,7 @@ async def test_get_by_id():
 async def test_get_by_field():
     item = await base_crud.get_by_field(data="John Doe", field_name="name")
     assert item is not None
-    assert item["name"] == "John Doe"
-
-
-@pytest.mark.asyncio(scope="session")
-async def test_get_all_by_field():
-    items = await base_crud.get_all_by_field(data="John Doe", field_name="name")
-    assert isinstance(items, list)
-    assert len(items) == 2
+    assert item[0]["name"] == "John Doe"
 
 
 @pytest.mark.asyncio(scope="session")
@@ -116,6 +109,8 @@ async def test_get_all():
 @pytest.mark.asyncio(scope="session")
 async def test_update_by_id():
     item = await base_crud.get_by_field(data="John Doe", field_name="name")
+    assert item is not None
+    item = item[0]
 
     success = await base_crud.update_by_id(item["_id"], data={"name": "New Name"})
     assert success is True
@@ -128,6 +123,8 @@ async def test_update_by_id():
 @pytest.mark.asyncio(scope="session")
 async def test_delete_by_id():
     item = await base_crud.get_by_field(data="John Doe", field_name="name")
+    assert item is not None
+    item = item[0]
 
     success = await base_crud.delete_by_id(_id=item["_id"])
     assert success is True

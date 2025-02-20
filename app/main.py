@@ -1,14 +1,23 @@
 import sys
-
+from contextlib import asynccontextmanager
 from config import settings
 from exceptions import CustomException
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from loguru import logger
 from middlewares.v1.authentication import AuthenticationMiddleware
 from routers import api_routers
+from users.services import user_services
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create default admin user
+    await user_services.create_admin()
+    yield
+
 
 app = FastAPI(
     title="FastAPI Base Project",
@@ -23,14 +32,23 @@ app = FastAPI(
       actions, and 'admin' enjoys full access across the platform.
     """,
     version="0.0.1",
+    lifespan=lifespan,
+)
+
+
+# Middlewares
+app.add_middleware(AuthenticationMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
 # Routers
 app.include_router(api_routers)
-
-# Middlewares
-app.add_middleware(AuthenticationMiddleware)
 
 # Logger
 logger.remove()

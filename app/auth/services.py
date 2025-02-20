@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from bcrypt import checkpw, gensalt, hashpw
 from core.services import BaseServices
 from db.base import BaseCRUD
 from fastapi import Request
@@ -68,6 +68,33 @@ class AuthenticationServices(BaseServices):
         if api_path in PUBLIC_APIS:
             return True
         return False
+    
+    async def hash(self, value) -> bytes:
+        """
+        Hashes a given string using bcrypt.
+
+        Args:
+            value (str): The string to be hashed.
+
+        Returns:
+            bytes: The hashed representation of the input string.
+        """
+        return hashpw(value.encode("utf8"), gensalt())
+
+    async def validate_hash(self, value, hashed_value) -> bool:
+        """
+        Validates a given string against a hashed value using bcrypt.
+
+        Args:
+            value (str): The string to validate.
+            hashed_value (bytes): The hashed value to compare against.
+
+        Returns:
+            bool: True if the string matches the hash, False otherwise.
+        """
+        if not checkpw(value.encode("utf-8"), hashed_value):
+            return False
+        return True
 
 
 authentication_services = AuthenticationServices(service_name="authentication")

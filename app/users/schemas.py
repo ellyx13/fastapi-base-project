@@ -4,7 +4,7 @@ from typing import List, Optional
 from core.schemas import EmailStr, PhoneStr
 from pydantic import BaseModel, Field, field_validator
 
-from . import config
+from .config import settings
 from .exceptions import ErrorCode as UserErrorCode
 
 
@@ -17,7 +17,7 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def check_the_minimum_length_of_the_password(cls, v: str) -> str:
-        if len(v) < config.MINIMUM_LENGTH_OF_THE_PASSWORD:
+        if len(v) < settings.minimum_length_of_the_password:
             raise UserErrorCode.InvalidPasswordLength()
         return v
 

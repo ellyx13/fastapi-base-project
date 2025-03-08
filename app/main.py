@@ -2,6 +2,7 @@ import sys
 from contextlib import asynccontextmanager
 
 from config import settings
+from db.engine import app_engine
 from exceptions import CustomException
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     # Create default admin user
     await user_services.create_admin()
     yield
+    await app_engine.close_connection()
 
 
 app = FastAPI(

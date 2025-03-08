@@ -8,7 +8,7 @@ from .engine import Engine
 
 class BaseCRUD:
     def __init__(self, database_engine: Engine, collection: str = None) -> None:
-        self.database = database_engine
+        self.database = database_engine.get_database()
         if collection:
             self.collection = self.database[collection]
             self.collection_name = collection

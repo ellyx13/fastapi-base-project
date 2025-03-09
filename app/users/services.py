@@ -18,7 +18,10 @@ class UserServices(BaseServices):
         results = await self.get_by_field(data=email, field_name="email", ignore_error=ignore_error)
         return results[0] if results else None
 
-    async def register(self, data: schemas.RegisterRequest) -> dict:
+    async def register(self, fullname: str, email: str, password: str, phone_number: str = None) -> dict:
+        data = {"fullname": fullname, "email": email, "password": password}
+        if phone_number:
+            data["phone_number"] = phone_number
         # Set the user role to 'USER' by default.
         data["type"] = value.UserRoles.USER.value
         # Add the current datetime as the creation time.
@@ -26,28 +29,21 @@ class UserServices(BaseServices):
         # Hash the provided password using bcrypt with a generated salt.
         data["password"] = await auth_services.hash(value=data["password"])
         # Save the user, ensuring the email is unique, using the save_unique function.
-        item = await self.save_unique(data=data, unique_field="email")
+        user = await self.save_unique(data=data, unique_field="email")
         # Update created_by after register to preserve query ownership logic
-        data_update = {"created_by": item["_id"]}
-        item = await self.update_by_id(_id=item["_id"], data=data_update)
-        # Generate an access token for the user.
-        item["access_token"] = await auth_services.create_access_token(user_id=item["_id"], user_type=item["type"])
-        item["token_type"] = "bearer"
-        return item
+        data_update = {"created_by": user["_id"]}
+        user = await self.update_by_id(_id=user["_id"], data=data_update)
+        return user
 
-    async def login(self, data: schemas.LoginRequest) -> dict:
-        item = await self.get_by_email(email=data["email"], ignore_error=True)
-        if not item:
+    async def login(self, email: str, password: str) -> dict:
+        user = await self.get_by_email(email=email, ignore_error=True)
+        if not user:
             raise UserErrorCode.Unauthorize()
         # Validate the provided password against the hashed value.
-        is_valid_password = await auth_services.validate_hash(value=data["password"], hashed_value=item["password"])
+        is_valid_password = await auth_services.validate_hash(value=password, hashed_value=user["password"])
         if not is_valid_password:
             raise UserErrorCode.Unauthorize()
-
-        # Generate an access token for the user.
-        item["access_token"] = await auth_services.create_access_token(user_id=item["_id"], user_type=item["type"])
-        item["token_type"] = "bearer"
-        return item
+        return user
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
         data["updated_at"] = self.get_current_datetime()

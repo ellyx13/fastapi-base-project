@@ -10,15 +10,11 @@ class UserControllers(BaseControllers):
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         super().__init__(controller_name, service)
 
-    async def register(self, data: schemas.RegisterRequest) -> dict:
-        # Convert the Pydantic model 'data' to a dictionary
-        data = data.model_dump()
-        return await self.service.register(data=data)
+    async def register(self, fullname: str, email: str, password: str, phone_number: str = None) -> dict:
+        return await self.service.register(fullname=fullname, email=email, password=password, phone_number=phone_number)
 
-    async def login(self, data: schemas.LoginRequest) -> dict:
-        # Convert the Pydantic model 'data' to a dictionary
-        data = data.model_dump()
-        return await self.service.login(data=data)
+    async def login(self, email: str, password: str) -> dict:
+        return await self.service.login(email=email, password=password)
 
     async def get_me(self, commons: CommonsDependencies, fields: str = None):
         current_user_id = self.get_current_user(commons=commons)

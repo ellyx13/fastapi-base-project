@@ -2,29 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from core.schemas import EmailStr, PhoneStr
-from pydantic import BaseModel, Field, field_validator
-
-from .config import settings
-from .exceptions import UserErrorCode
-
-
-class RegisterRequest(BaseModel):
-    fullname: str
-    email: EmailStr
-    phone: Optional[PhoneStr] = None
-    password: str
-
-    @field_validator("password")
-    @classmethod
-    def check_the_minimum_length_of_the_password(cls, v: str) -> str:
-        if len(v) < settings.minimum_length_of_the_password:
-            raise UserErrorCode.InvalidPasswordLength()
-        return v
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+from pydantic import BaseModel, Field
 
 
 class Response(BaseModel):

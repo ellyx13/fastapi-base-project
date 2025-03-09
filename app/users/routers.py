@@ -60,18 +60,6 @@ class RoutersCBV:
             return results
         return schemas.Response(**results)
 
-    @router.post("/users/register", status_code=201, responses={201: {"model": schemas.LoginResponse, "description": "Register user success"}})
-    @access_control(public=True)
-    async def register(self, data: schemas.RegisterRequest):
-        result = await user_controllers.register(data=data)
-        return schemas.LoginResponse(**result)
-
-    @router.post("/users/login", status_code=201, responses={201: {"model": schemas.LoginResponse, "description": "Register user success"}})
-    @access_control(public=True)
-    async def login(self, data: schemas.LoginRequest):
-        result = await user_controllers.login(data=data)
-        return schemas.LoginResponse(**result)
-
     @router.put("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Update user success"}})
     @access_control(public=False)
     async def edit(self, _id: ObjectIdStr, data: schemas.EditRequest):

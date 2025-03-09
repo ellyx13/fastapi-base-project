@@ -6,14 +6,14 @@ payload_user_register = {"fullname": "testuser", "email": "test@example.com", "p
 
 @pytest.mark.asyncio(scope="session")
 async def test_user_register_success(client: AsyncClient):
-    response = await client.post("v1/users/register", json=payload_user_register)
+    response = await client.post("v1/auth/register", json=payload_user_register)
     assert response.status_code == 201
 
 
 @pytest.mark.asyncio(scope="session")
 async def test_user_login(client: AsyncClient):
     payload = {"email": "test@example.com", "password": "testpassword"}
-    response = await client.post("v1/users/login", json=payload)
+    response = await client.post("v1/auth/login", json=payload)
     assert response.status_code == 201
     response = response.json()
     assert "access_token" in response

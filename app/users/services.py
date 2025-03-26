@@ -61,11 +61,7 @@ class UserServices(BaseServices):
         user = await self.get_by_field(data=settings.default_admin_email, field_name="email", ignore_error=True)
         if user:
             return user
-        data = {}
-        data["fullname"] = "Admin"
-        data["email"] = settings.default_admin_email
-        data["password"] = settings.default_admin_password
-        admin = await self.register(data=data)
+        admin = await self.register(fullname="Admin", email=settings.default_admin_email, password=settings.default_admin_password)
         return await self.grant_admin(_id=admin["_id"])
 
 

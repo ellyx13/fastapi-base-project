@@ -98,7 +98,8 @@ class BaseServices:
             return None
 
         query = {}
-        query[self.ownership_field] = current_user_id
+        if self.ownership_field:
+            query[self.ownership_field] = current_user_id
         return query
 
     async def get_by_id(self, _id, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> dict:

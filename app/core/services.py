@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Generic, Type, TypeVar
 
 from config import settings as root_settings
 from db.base import BaseCRUD
@@ -10,8 +11,10 @@ from .config import settings
 from .exceptions import CoreErrorCode
 from .schemas import CommonsDependencies
 
+TModel = TypeVar("TModel", bound=BaseModel)
 
-class BaseServices:
+
+class BaseServices(Generic[TModel]):
     """
     A base service class that provides common CRUD operations and utilities for interacting with the database.
 
@@ -29,13 +32,13 @@ class BaseServices:
 
     """
 
-    def __init__(self, service_name: str, crud: BaseCRUD = None, model: BaseModel = None) -> None:
+    def __init__(self, service_name: str, crud: BaseCRUD = None, model: Type[TModel] = None) -> None:
         self.service_name = service_name
         self.ownership_field = settings.ownership_field
         if crud and root_settings.is_production() and isinstance(crud, BaseCRUD) is False:
             raise ValueError(f"The 'crud' attribute must be a BaseCRUD instance for {self.service_name} service.")
         if model and isinstance(model, ModelMetaclass) is False:
-            raise ValueError(f"The 'model' attribute must be a Pydantic model for {self.service_name} service.")
+            raise ValueError(f"The 'model' attribute must be a Pydantic Model for {self.service_name} service.")
         self.crud = crud
         self.model = model
 

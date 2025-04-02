@@ -5,7 +5,6 @@ from auth.services import auth_services
 from bcrypt import gensalt, hashpw
 from exceptions import CustomException
 from users.exceptions import UserErrorCode
-from users.models import Users
 from users.services import UserServices
 
 service_name = "users"
@@ -13,7 +12,7 @@ service_name = "users"
 
 @pytest.fixture
 def user_services():
-    return UserServices(service_name=service_name, crud=AsyncMock(), model=Users)
+    return UserServices(crud=AsyncMock())
 
 
 @pytest.mark.asyncio

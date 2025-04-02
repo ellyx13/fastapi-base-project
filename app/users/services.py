@@ -5,14 +5,15 @@ from db.base import BaseCRUD
 from db.engine import app_engine
 from utils import value
 
-from . import models, schemas
+from . import schemas
 from .config import settings
 from .exceptions import UserErrorCode
+from .models import Users
 
 
-class UserServices(BaseServices):
-    def __init__(self, service_name, crud=None, model=None):
-        super().__init__(service_name, crud, model)
+class UserServices(BaseServices[Users]):
+    def __init__(self, crud: BaseCRUD = None):
+        super().__init__(service_name="users", crud=crud, model=Users)
 
     async def get_by_email(self, email: str, ignore_error: bool = False) -> dict:
         results = await self.get_by_field(data=email, field_name="email", ignore_error=ignore_error)
@@ -66,4 +67,4 @@ class UserServices(BaseServices):
 
 
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")
-user_services = UserServices(service_name="users", crud=user_crud, model=models.Users)
+user_services = UserServices(crud=user_crud)

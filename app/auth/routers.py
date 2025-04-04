@@ -27,4 +27,4 @@ class RoutersCBV:
     @access_control(public=True)
     async def login(self, data: schemas.LoginRequest):
         result = await auth_controllers.login_user(data=data)
-        return schemas.LoginResponse(**result)
+        return schemas.LoginResponse.model_validate(obj=result)

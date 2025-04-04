@@ -105,6 +105,24 @@ class BaseServices(Generic[TModel]):
             query[self.ownership_field] = current_user_id
         return query
 
+    async def _validate_model(self, data: list | dict) -> list | TModel:
+        """
+        Validates the provided data against the model.
+
+        Args:
+            data (list | dict): The data to validate.
+
+        Returns:
+            list | TModel: The validated data.
+
+        Raises:
+            ValueError: If the data is not valid according to the model.
+
+        """
+        if isinstance(data, list):
+            return [self.model.model_validate(item) for item in data]
+        return self.model.model_validate(data)
+
     async def get_by_id(self, _id: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> TModel:
         """
         Retrieves a record by its ID.
@@ -218,7 +236,7 @@ class BaseServices(Generic[TModel]):
         items = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
         if not items and not ignore_error:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
-        return items
+        return await self._validate_model(data=items)
 
     async def _check_modified(self, old_data: TModel, new_data: TModel, ignore_error: bool) -> bool:
         """

@@ -18,13 +18,13 @@ class AuthControllers(BaseControllers):
         extra_data["token_type"] = "bearer"
         return self.schema_validate(schema=schemas.LoginResponse, data=user, extra_data=extra_data)
 
-    async def login_user(self, data: schemas.LoginRequest) -> dict:
-        data = data.model_dump()
-        user = await user_controllers.login(email=data["email"], password=data["password"])
+    async def login_user(self, data: schemas.LoginRequest) -> schemas.LoginResponse:
+        user = await user_controllers.login(email=data.email, password=data.password)
         # Generate an access token for the user.
-        user["access_token"] = await self.service.create_access_token(user_id=user["_id"], user_type=user["type"])
-        user["token_type"] = "bearer"
-        return user
+        extra_data = {}
+        extra_data["access_token"] = await self.service.create_access_token(user_id=user.id, user_type=user.type)
+        extra_data["token_type"] = "bearer"
+        return self.schema_validate(schema=schemas.LoginResponse, data=user, extra_data=extra_data)
 
 
 auth_controllers = AuthControllers(controller_name="auth", service=auth_services)

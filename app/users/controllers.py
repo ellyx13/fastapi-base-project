@@ -15,7 +15,7 @@ class UserControllers(BaseControllers):
     async def register(self, data: auth_schemas.RegisterRequest) -> Users:
         return await self.service.register(data=data)
 
-    async def login(self, email: str, password: str) -> dict:
+    async def login(self, email: str, password: str) -> Users:
         return await self.service.login(email=email, password=password)
 
     async def get_me(self, commons: CommonsDependencies, fields: str = None):

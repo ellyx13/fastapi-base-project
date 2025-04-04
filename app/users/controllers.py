@@ -4,6 +4,7 @@ from core.schemas import CommonsDependencies
 from core.services import BaseServices
 
 from . import schemas
+from .models import Users
 from .services import user_services
 
 
@@ -11,10 +12,10 @@ class UserControllers(BaseControllers):
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         super().__init__(controller_name, service)
 
-    async def register(self, data: auth_schemas.RegisterRequest) -> schemas.LoginResponse:
+    async def register(self, data: auth_schemas.RegisterRequest) -> Users:
         return await self.service.register(data=data)
 
-    async def login(self, email: str, password: str) -> schemas.LoginResponse:
+    async def login(self, email: str, password: str) -> Users:
         return await self.service.login(email=email, password=password)
 
     async def get_me(self, commons: CommonsDependencies, fields: str = None) -> schemas.Response:

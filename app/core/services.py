@@ -204,7 +204,7 @@ class BaseServices(Generic[TModel]):
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
-    ) -> list:
+    ) -> list | None:
         """
         Retrieves a record by a specific field value.
 
@@ -234,8 +234,10 @@ class BaseServices(Generic[TModel]):
             query.update(ownership_query)
 
         items = await self.crud.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, query=query)
-        if not items and not ignore_error:
-            raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
+        if not items:
+            if not ignore_error:
+                raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
+            return None
         return await self._validate_model(data=items)
 
     async def _check_modified(self, old_data: TModel, new_data: TModel, ignore_error: bool) -> bool:

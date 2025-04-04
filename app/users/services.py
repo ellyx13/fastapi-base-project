@@ -31,7 +31,7 @@ class UserServices(BaseServices[Users]):
         # Save the user, ensuring the email is unique, using the save_unique function.
         user = await self.save_unique(data=user_model, unique_field="email")
         # Update created_by after register to preserve query ownership logic
-        data_update = internal_models.UpdateCreatedByModel(created_by=user.id)
+        data_update = internal_models.UpdateCreatedBy(created_by=user.id)
         user = await self.update_by_id(_id=user.id, data=data_update)
         return user
 
@@ -46,14 +46,12 @@ class UserServices(BaseServices[Users]):
         return user
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
-        data = internal_models.EditRequestWithAudit.from_edit_request(data, updated_by=commons.current_user)
+        data = internal_models.EditWithAudit.from_edit_request(data, updated_by=commons.current_user)
         return await self.update_by_id(_id=_id, data=data)
 
     async def grant_admin(self, _id: str, commons: CommonsDependencies = None):
-        data = {}
-        data["type"] = value.UserRoles.ADMIN.value
-        data["updated_at"] = self.get_current_datetime()
-        data["updated_by"] = self.get_current_user(commons=commons)
+        updated_by = self.get_current_user(commons=commons)
+        data = internal_models.GrantAdmin(updated_by=updated_by)
         return await self.update_by_id(_id=_id, data=data)
 
     async def create_admin(self):
@@ -62,7 +60,7 @@ class UserServices(BaseServices[Users]):
             return user
         data = auth_schemas.RegisterRequest(fullname="Admin", email=settings.default_admin_email, password=settings.default_admin_password)
         admin = await self.register(data=data)
-        return await self.grant_admin(_id=admin["_id"])
+        return await self.grant_admin(_id=admin.id)
 
 
 user_crud = BaseCRUD(database_engine=app_engine, collection="users")

@@ -21,7 +21,7 @@ class RoutersCBV:
     @access_control(public=True)
     async def register(self, data: schemas.RegisterRequest):
         result = await auth_controllers.register_user(data=data)
-        return schemas.LoginResponse(**result)
+        return schemas.LoginResponse.model_validate(obj=result)
 
     @router.post("/auth/login", status_code=201, responses={201: {"model": schemas.LoginResponse, "description": "Register user success"}})
     @access_control(public=True)

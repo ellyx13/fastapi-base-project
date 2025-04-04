@@ -1,4 +1,7 @@
+from typing import Type
+
 from core.schemas import CommonsDependencies
+from pydantic import BaseModel
 
 from .services import BaseServices
 
@@ -79,3 +82,25 @@ class BaseControllers:
 
     def get_current_user_type(self, commons: CommonsDependencies):
         return commons.user_type
+
+    def schema_validate(self, schema: Type[BaseModel], data: BaseModel, extra_data: dict = None) -> BaseModel:
+        """
+        Validates and merges data into a Pydantic schema instance.
+
+        Args:
+            schema (Type[BaseModel]): The Pydantic schema class to validate against.
+            data (BaseModel): The initial data to validate.
+            extra_data (dict, optional): Additional data to merge with the initial data before validation. Defaults to None.
+
+        Returns:
+            BaseModel: An instance of the provided schema class with the validated and merged data.
+
+        Raises:
+            ValidationError: If the data does not conform to the schema.
+        """
+        data_dict = data.model_dump()
+        # Merge extra data if provided
+        if extra_data:
+            data_dict.update(extra_data)
+        # Validate the dictionary and return a Pydantic schema instance
+        return schema.model_validate(obj=data_dict)

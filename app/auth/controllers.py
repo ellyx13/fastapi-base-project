@@ -10,13 +10,13 @@ class AuthControllers(BaseControllers):
     def __init__(self, controller_name: str, service: BaseServices = None) -> None:
         super().__init__(controller_name, service)
 
-    async def register_user(self, data: schemas.RegisterRequest) -> dict:
-        data = data.model_dump()
-        user = await user_controllers.register(fullname=data["fullname"], email=data["email"], password=data["password"], phone_number=data.get("phone_number"))
+    async def register_user(self, data: schemas.RegisterRequest) -> schemas.LoginResponse:
+        user = await user_controllers.register(data=data)
         # Generate an access token for the user.
-        user["access_token"] = await self.service.create_access_token(user_id=user["_id"], user_type=user["type"])
-        user["token_type"] = "bearer"
-        return user
+        extra_data = {}
+        extra_data["access_token"] = await self.service.create_access_token(user_id=user.id, user_type=user.type)
+        extra_data["token_type"] = "bearer"
+        return self.schema_validate(schema=schemas.LoginResponse, data=user, extra_data=extra_data)
 
     async def login_user(self, data: schemas.LoginRequest) -> dict:
         data = data.model_dump()

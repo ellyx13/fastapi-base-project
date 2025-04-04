@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generic, Type, TypeVar
+from typing import Generic, Type, TypeVar, Union
 
 from config import settings as root_settings
 from db.base import BaseCRUD
@@ -105,7 +105,7 @@ class BaseServices(Generic[TModel]):
             query[self.ownership_field] = current_user_id
         return query
 
-    async def get_by_id(self, _id, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> dict:
+    async def get_by_id(self, _id: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> TModel:
         """
         Retrieves a record by its ID.
 
@@ -117,7 +117,7 @@ class BaseServices(Generic[TModel]):
             commons (CommonsDependencies, optional): Common dependencies for the request. Defaults to None.
 
         Returns:
-            dict: A dictionary representing the retrieved record.
+            TModel: The retrieved record.
 
         Raises:
             CoreErrorCode.NotFound: If the record is not found and `ignore_error` is False.
@@ -136,7 +136,7 @@ class BaseServices(Generic[TModel]):
         item = await self.crud.get_by_id(_id=_id, fields_limit=fields_limit, query=query)
         if not item and not ignore_error:
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=_id)
-        return item
+        return self.model.model_validate(item)
 
     async def get_all(
         self,
@@ -220,27 +220,27 @@ class BaseServices(Generic[TModel]):
             raise CoreErrorCode.NotFound(service_name=self.service_name, item=data)
         return items
 
-    async def _check_modified(self, old_data: dict, new_data: dict, ignore_error: bool) -> bool:
+    async def _check_modified(self, old_data: TModel, new_data: TModel, ignore_error: bool) -> bool:
         """
-        Checks if any data has been modified in the update request.
-
+        Checks if the new data is different from the old data.
         Args:
-            old_data (dict): The original data before modification.
-            new_data (dict): The new data to compare against the original data.
-            ignore_error (bool): Whether to ignore errors if no modifications are found.
-
+            old_data (TModel): The old data to compare against.
+            new_data (TModel): The new data to compare.
+            ignore_error (bool): Whether to ignore errors if the data is not modified.
         Returns:
-            bool: True if data has been modified, False otherwise.
-
-        Raises:
-            CoreErrorCode.NotModified: If no modifications are detected and `ignore_error` is False.
-
+            bool: True if the data is modified, False otherwise.
         """
-        for key, item_value in new_data.items():
-            if key in ["updated_at", "updated_by"]:
+
+        for field in new_data.model_fields:
+            if field in ["updated_at", "updated_by"]:
                 continue
-            if old_data.get(key) != item_value:
+
+            new_val = getattr(new_data, field, None)
+            old_val = getattr(old_data, field, None)
+
+            if new_val != old_val:
                 return True
+
         if ignore_error:
             return False
         raise CoreErrorCode.NotModified(service_name=self.service_name)
@@ -276,37 +276,37 @@ class BaseServices(Generic[TModel]):
         first_item = next(iter(query.values()))
         raise CoreErrorCode.Conflict(service_name=self.service_name, item=first_item)
 
-    async def save(self, data: dict) -> dict:
+    async def save(self, data: TModel) -> TModel:
         """
         Saves a new record to the database.
 
         Args:
-            data (dict): The data to be saved.
+            data (TModel): The data to be saved.
 
         Returns:
-            dict: The saved record, retrieved by its ID.
+            TModel: The saved record, retrieved by its ID.
         """
         self.ensure_crud_provided()
         # Validate and process the data using the provided model.
-        data_save = self.model(**data).model_dump(exclude_none=True)
+        data_save = data.model_dump(exclude_none=True)
         item = await self.crud.save(data=data_save)
         result = await self.get_by_id(_id=item)
         return result
 
-    async def save_many(self, data: list) -> list[dict]:
+    async def save_many(self, data: list[TModel]) -> list[TModel]:
         """
         Saves multiple records to the database.
 
         Args:
-            data (list): A list of dictionaries, each representing a record to be saved.
+            data (list[TModel]): A list of dictionaries, each representing a record to be saved.
 
         Returns:
-            list[dict]: A list of saved records, each retrieved by its ID.
+            list[TModel]: A list of saved records, each retrieved by its ID.
 
         """
         self.ensure_crud_provided()
         # Validate and process each record using the provided model.
-        data_save = [self.model(**item).model_dump(exclude_none=True) for item in data]
+        data_save = [item.model_dump(exclude_none=True) for item in data]
         items = await self.crud.save_many(data=data_save)
         results = []
         for item_id in items:
@@ -314,45 +314,53 @@ class BaseServices(Generic[TModel]):
             results.append(item)
         return results
 
-    async def save_unique(self, data: dict, unique_field: str | list, ignore_error: bool = False) -> bool | dict:
+    async def save_unique(self, data: TModel, unique_field: Union[str, list[str]], ignore_error: bool = False) -> Union[bool, dict]:
         """
         Saves a new record to the database, ensuring that specified fields are unique.
 
         Args:
-            data (dict): The data to be saved.
-            unique_field (str | list): The field or fields that must be unique in the database.
-            ignore_error (bool, optional): Whether to ignore errors if a conflict is found. Defaults to False.
+            data (TModel): The model instance to be saved.
+            unique_field (str | list): The field(s) that must be unique in the database.
+            ignore_error (bool): Whether to ignore errors if a conflict is found.
 
         Returns:
-            dict: The saved record, retrieved by its ID.
+            dict | bool: The saved record or False if ignored.
 
         Raises:
-            CoreErrorCode.Conflict: If a conflict is detected and `ignore_error` is False.
+            CoreErrorCode.Conflict: If a conflict is detected and ignore_error is False.
         """
         self.ensure_crud_provided()
-        data_save = self.model(**data).model_dump(exclude_none=True)
-        item = await self.crud.save_unique(data=data_save, unique_field=unique_field)
+
+        data_dict = data.model_dump(exclude_none=True)
+        item = await self.crud.save_unique(data=data_dict, unique_field=unique_field)
+
         if not item:
             if ignore_error:
                 return False
+            if isinstance(unique_field, list):
+                unique_value = getattr(data, unique_field[0])
             else:
-                if isinstance(unique_field, list):
-                    unique_value = data[unique_field[0]]
-                else:
-                    unique_value = data[unique_field]
-                raise CoreErrorCode.Conflict(service_name=self.service_name, item=unique_value)
-        result = await self.get_by_id(_id=item)
-        return result
+                unique_value = getattr(data, unique_field)
+            raise CoreErrorCode.Conflict(service_name=self.service_name, item=unique_value)
+
+        return await self.get_by_id(_id=item)
 
     async def update_by_id(
-        self, _id: str, data: dict, unique_field: str | list = None, check_modified: bool = True, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
-    ) -> dict | None:
+        self,
+        _id: str,
+        data: TModel,
+        unique_field: str | list = None,
+        check_modified: bool = True,
+        ignore_error: bool = False,
+        include_deleted: bool = False,
+        commons: CommonsDependencies = None,
+    ) -> TModel | None:
         """
         Updates a record by its ID.
 
         Args:
             _id (str): The ID of the record to update.
-            data (dict): The new data to update the record with.
+            data (TModel): The new data to update the record with.
             unique_field (str | list, optional): The field or fields that must be unique in the database. Defaults to None.
             check_modified (bool, optional): Whether to check if the data has been modified before updating. Defaults to True.
             ignore_error (bool, optional): Whether to ignore errors if the record is not found or not modified. Defaults to False.
@@ -360,7 +368,7 @@ class BaseServices(Generic[TModel]):
             commons (CommonsDependencies, optional): Common dependencies for the request. Defaults to None.
 
         Returns:
-            dict | None: The updated record, or None if `ignore_error` is True and the record is not found.
+            TModel | None: The updated record, or None if `ignore_error` is True and the record is not found.
 
         Raises:
             CoreErrorCode.NotFound: If the record is not found and `ignore_error` is False.
@@ -376,7 +384,8 @@ class BaseServices(Generic[TModel]):
             await self._check_modified(old_data=item, new_data=data, ignore_error=ignore_error)
         if unique_field:
             await self._check_unique(data=data, unique_field=unique_field, ignore_error=ignore_error)
-        await self.crud.update_by_id(_id=_id, data=data)
+        data_dict = data.model_dump(exclude_none=True)
+        await self.crud.update_by_id(_id=_id, data=data_dict)
         result = await self.get_by_id(_id=_id, ignore_error=ignore_error, include_deleted=True)
         return result
 

@@ -29,3 +29,13 @@ class LoginRequest(BaseModel):
 class LoginResponse(user_schemas.Response):
     access_token: str
     token_type: str
+
+    @classmethod
+    def from_register(cls, data: RegisterRequest, access_token: str, token_type: str) -> "LoginResponse":
+        return cls(
+            fullname=data.fullname,
+            email=data.email,
+            phone=data.phone,
+            access_token=access_token,
+            token_type=token_type,
+        )

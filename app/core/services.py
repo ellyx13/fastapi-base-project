@@ -129,7 +129,6 @@ class BaseServices(Generic[TModel]):
 
         """
         if isinstance(data, list):
-            print(11111111)
             return [self.model.model_validate(item) for item in data]
         return self.model.model_validate(data)
 

@@ -77,7 +77,7 @@ class BaseControllers:
         result = await self.service.soft_delete_by_id(_id=_id, ignore_error=ignore_error, commons=commons)
         return result
 
-    def get_current_user(self, commons: CommonsDependencies):
+    def get_current_user(self, commons: CommonsDependencies) -> str | None:
         return commons.current_user
 
     def get_current_user_type(self, commons: CommonsDependencies):

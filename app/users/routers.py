@@ -30,8 +30,8 @@ class RoutersCBV:
     @router.get("/users/me", status_code=200, responses={200: {"model": schemas.Response, "description": "Get users success"}})
     @access_control(public=False)
     async def get_me(self, fields: str = None):
-        results = await user_controllers.get_me(commons=self.commons, fields=fields)
-        return schemas.Response(**results)
+        result = await user_controllers.get_me(commons=self.commons, fields=fields)
+        return schemas.Response.model_validate(obj=result)
 
     @router.get("/users", status_code=200, responses={200: {"model": schemas.ListResponse, "description": "Get users success"}})
     @access_control(admin=True, public=False)
@@ -63,8 +63,8 @@ class RoutersCBV:
     @router.put("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Update user success"}})
     @access_control(public=False)
     async def edit(self, _id: ObjectIdStr, data: schemas.EditRequest):
-        results = await user_controllers.edit(_id=_id, data=data, commons=self.commons)
-        return schemas.Response(**results)
+        result = await user_controllers.edit(_id=_id, data=data, commons=self.commons)
+        return schemas.Response.model_validate(obj=result)
 
     @router.delete("/users/{_id}", status_code=204)
     @access_control(admin=True, public=False)

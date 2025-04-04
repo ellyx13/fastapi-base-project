@@ -343,8 +343,8 @@ class BaseCRUD:
             results.append(document)
             result["records_per_page"] += 1
         total_records = await self.collection.count_documents(query)
-        total_page = math.ceil(total_records / limit) if limit else 1
+        total_pages = math.ceil(total_records / limit) if limit else 1
         result["total_items"] = total_records
-        result["total_page"] = total_page
+        result["total_pages"] = total_pages
         result["results"] = results
         return result

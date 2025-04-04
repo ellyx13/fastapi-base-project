@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generic, Type, TypeVar, Union
+from typing import Generic, List, Type, TypeVar, Union
 
 from config import settings as root_settings
 from db.base import BaseCRUD
@@ -12,6 +12,15 @@ from .exceptions import CoreErrorCode
 from .schemas import CommonsDependencies
 
 TModel = TypeVar("TModel", bound=BaseModel)
+
+
+# This class is used to define the structure of the response when retrieving all records. Why I put class here?
+# Because it is a generic class that can be used to define the structure of the response for any model.
+class GetAllModel(BaseModel):
+    total_items: int
+    total_pages: int
+    records_per_page: int
+    results: List[BaseModel]
 
 
 class BaseServices(Generic[TModel]):
@@ -105,7 +114,7 @@ class BaseServices(Generic[TModel]):
             query[self.ownership_field] = current_user_id
         return query
 
-    async def _validate_model(self, data: list | dict) -> list | TModel:
+    async def _validate_model(self, data: list | dict) -> list[TModel] | TModel:
         """
         Validates the provided data against the model.
 
@@ -120,6 +129,7 @@ class BaseServices(Generic[TModel]):
 
         """
         if isinstance(data, list):
+            print(11111111)
             return [self.model.model_validate(item) for item in data]
         return self.model.model_validate(data)
 
@@ -168,7 +178,7 @@ class BaseServices(Generic[TModel]):
         order_by: str = "desc",
         include_deleted: bool = False,
         commons: CommonsDependencies = None,
-    ) -> dict:
+    ) -> GetAllModel:
         """
         Retrieves all records based on the provided query parameters.
 
@@ -185,7 +195,7 @@ class BaseServices(Generic[TModel]):
             commons (CommonsDependencies, optional): Common dependencies for the request. Defaults to None.
 
         Returns:
-            dict: A dictionary containing the retrieved records and additional metadata.
+            GetAllModel: A model containing the total number of items, total pages, and the results.
 
         """
         self.ensure_crud_provided()
@@ -199,8 +209,9 @@ class BaseServices(Generic[TModel]):
         if ownership_query:
             query.update(ownership_query)
 
-        item = await self.crud.get_all(query=query, search=search, search_in=search_in, page=page, limit=limit, fields_limit=fields_limit, sort_by=sort_by, order_by=order_by)
-        return item
+        results = await self.crud.get_all(query=query, search=search, search_in=search_in, page=page, limit=limit, fields_limit=fields_limit, sort_by=sort_by, order_by=order_by)
+        results["results"] = await self._validate_model(data=results["results"])
+        return GetAllModel(total_items=results["total_items"], total_pages=results["total_pages"], records_per_page=results["records_per_page"], results=results["results"])
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None

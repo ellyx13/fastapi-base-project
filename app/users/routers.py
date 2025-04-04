@@ -50,7 +50,7 @@ class RoutersCBV:
         )
         if pagination.fields:
             return results
-        return schemas.ListResponse(**results)
+        return schemas.ListResponse.model_validate(obj=results, from_attributes=True)
 
     @router.get("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Get user success"}})
     @access_control(public=False)

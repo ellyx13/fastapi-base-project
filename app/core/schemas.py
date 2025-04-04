@@ -82,7 +82,7 @@ class PaginationParams:
         limit: int = Query(default=20, gt=0),
         fields: str = None,
         sort_by: str = Query("created_at", description="Anything you want"),
-        order_by: OrderBy = Query(OrderBy.DECREASE.value, description="desc: Descending | asc: Ascending"),
+        order_by: OrderBy = Query(OrderBy.DECREASE, description="desc: Descending | asc: Ascending"),
     ):
         self.query = dict(request.query_params)
         self.search = search

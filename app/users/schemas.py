@@ -17,7 +17,7 @@ class Response(BaseModel):
 
 class ListResponse(BaseModel):
     total_items: int
-    total_page: int
+    total_pages: int
     records_per_page: int
     results: List[Response]
 

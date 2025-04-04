@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 from utils import value
 
+from . import internal_models
 from .config import settings
 from .exceptions import CoreErrorCode
 from .schemas import CommonsDependencies
@@ -456,8 +457,7 @@ class BaseServices(Generic[TModel]):
             dict: The updated record with the soft delete information.
         """
         self.ensure_crud_provided()
-        data_update = {}
-        data_update["deleted_at"] = self.get_current_datetime()
-        data_update["deleted_by"] = self.get_current_user(commons=commons)
-        result = await self.update_by_id(_id=_id, data=data_update, ignore_error=ignore_error, commons=commons)
+        deleted_by = self.get_current_user(commons=commons)
+        data = internal_models.SoftDelete(deleted_by=deleted_by)
+        result = await self.update_by_id(_id=_id, data=data, ignore_error=ignore_error, commons=commons)
         return result

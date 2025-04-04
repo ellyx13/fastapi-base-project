@@ -18,16 +18,14 @@ class UserControllers(BaseControllers):
     async def login(self, email: str, password: str) -> Users:
         return await self.service.login(email=email, password=password)
 
-    async def get_me(self, commons: CommonsDependencies, fields: str = None) -> schemas.Response:
+    async def get_me(self, commons: CommonsDependencies, fields: str = None) -> Users:
         current_user_id = self.get_current_user(commons=commons)
-        result = await self.get_by_id(_id=current_user_id, fields_limit=fields, commons=commons)
-        return self.schema_validate(schema=schemas.Response, data=result)
+        return await self.get_by_id(_id=current_user_id, fields_limit=fields, commons=commons)
 
-    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> schemas.Response:
+    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> Users:
         # Check if that user id exists or not
         await self.get_by_id(_id=_id, commons=commons)
-        result = await self.service.edit(_id=_id, data=data, commons=commons)
-        return self.schema_validate(schema=schemas.Response, data=result)
+        return await self.service.edit(_id=_id, data=data, commons=commons)
 
 
 user_controllers = UserControllers(controller_name="users", service=user_services)

@@ -53,8 +53,8 @@ class RoutersCBV:
     @router.put("/tasks/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Update task success"}})
     @access_control(public=False)
     async def edit(self, _id: ObjectIdStr, data: schemas.EditRequest):
-        results = await task_controllers.edit(_id=_id, data=data, commons=self.commons)
-        return schemas.Response(**results)
+        result = await task_controllers.edit(_id=_id, data=data, commons=self.commons)
+        return schemas.Response.model_validate(obj=result, from_attributes=True)
 
     @router.delete("/tasks/{_id}", status_code=204)
     @access_control(public=False)

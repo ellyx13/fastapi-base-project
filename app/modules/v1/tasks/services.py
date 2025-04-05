@@ -3,7 +3,7 @@ from core.services import BaseServices
 from db.base import BaseCRUD
 from db.engine import app_engine
 
-from . import schemas
+from . import internal_models, schemas
 from .models import Tasks
 
 
@@ -16,9 +16,9 @@ class TaskServices(BaseServices[Tasks]):
         task = Tasks(summary=data.summary, description=data.description, status="to_do", created_by=created_by)
         return await self.save(data=task)
 
-    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
-        data["updated_by"] = self.get_current_user(commons=commons)
-        data["updated_at"] = self.get_current_datetime()
+    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> Tasks:
+        updated_by = self.get_current_user(commons=commons)
+        data = internal_models.EditWithAudit(summary=data.summary, description=data.description, updated_by=updated_by)
         return await self.update_by_id(_id=_id, data=data)
 
 

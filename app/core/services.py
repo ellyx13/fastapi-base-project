@@ -261,9 +261,8 @@ class BaseServices(Generic[TModel]):
         Returns:
             bool: True if the data is modified, False otherwise.
         """
-
         for field in new_data.model_fields:
-            if field in ["updated_at", "updated_by"]:
+            if field in ["updated_at", "updated_by"] or getattr(new_data, field) is None:
                 continue
 
             new_val = getattr(new_data, field, None)

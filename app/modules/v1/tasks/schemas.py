@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class CreateRequest(BaseModel):
@@ -10,7 +10,7 @@ class CreateRequest(BaseModel):
 
 
 class Response(BaseModel):
-    id: str = Field(alias="_id")
+    id: str
     summary: str
     description: Optional[str] = None
     status: str

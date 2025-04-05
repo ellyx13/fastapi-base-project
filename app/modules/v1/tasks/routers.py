@@ -48,7 +48,7 @@ class RoutersCBV:
     @access_control(public=False)
     async def create(self, data: schemas.CreateRequest):
         result = await task_controllers.create(data=data, commons=self.commons)
-        return schemas.Response(**result)
+        return schemas.Response.model_validate(obj=result, from_attributes=True)
 
     @router.put("/tasks/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Update task success"}})
     @access_control(public=False)

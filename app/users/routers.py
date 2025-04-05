@@ -33,6 +33,12 @@ class RoutersCBV:
         result = await user_controllers.get_me(commons=self.commons, fields=fields)
         return schemas.Response.model_validate(obj=result, from_attributes=True)
 
+    @router.put("/users/me", status_code=200, responses={200: {"model": schemas.Response, "description": "Update user success"}})
+    @access_control(public=False)
+    async def edit_me(self, data: schemas.EditRequest):
+        result = await user_controllers.edit_me(data=data, commons=self.commons)
+        return schemas.Response.model_validate(obj=result, from_attributes=True)
+
     @router.get("/users", status_code=200, responses={200: {"model": schemas.ListResponse, "description": "Get users success"}})
     @access_control(admin=True, public=False)
     async def get_all(self, pagination: PaginationParams = Depends()):
@@ -53,7 +59,7 @@ class RoutersCBV:
         return schemas.ListResponse.model_validate(obj=results, from_attributes=True)
 
     @router.get("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Get user success"}})
-    @access_control(public=False)
+    @access_control(admin=True, public=False)
     async def get_detail(self, _id: ObjectIdStr, fields: str = None):
         result = await user_controllers.get_by_id(_id=_id, fields_limit=fields, commons=self.commons)
         if fields:
@@ -61,10 +67,10 @@ class RoutersCBV:
         return schemas.Response.model_validate(obj=result, from_attributes=True)
 
     @router.put("/users/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Update user success"}})
-    @access_control(public=False)
+    @access_control(admin=True, public=False)
     async def edit(self, _id: ObjectIdStr, data: schemas.EditRequest):
         result = await user_controllers.edit(_id=_id, data=data, commons=self.commons)
-        return schemas.Response.model_validate(obj=result)
+        return schemas.Response.model_validate(obj=result, from_attributes=True)
 
     @router.delete("/users/{_id}", status_code=204)
     @access_control(admin=True, public=False)

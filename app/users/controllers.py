@@ -27,5 +27,9 @@ class UserControllers(BaseControllers):
         await self.get_by_id(_id=_id, commons=commons)
         return await self.service.edit(_id=_id, data=data, commons=commons)
 
+    async def edit_me(self, data: schemas.EditRequest, commons: CommonsDependencies) -> Users:
+        current_user_id = self.get_current_user(commons=commons)
+        return await self.edit(_id=current_user_id, data=data, commons=commons)
+
 
 user_controllers = UserControllers(controller_name="users", service=user_services)

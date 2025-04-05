@@ -45,7 +45,7 @@ class UserServices(BaseServices[Users]):
             raise UserErrorCode.Unauthorize()
         return user
 
-    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> dict:
+    async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> Users:
         data = internal_models.EditWithAudit.from_edit_request(data, updated_by=commons.current_user)
         return await self.update_by_id(_id=_id, data=data)
 

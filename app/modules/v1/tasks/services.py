@@ -12,13 +12,11 @@ class TaskServices(BaseServices[Tasks]):
         super().__init__(service_name="tasks", crud=crud, model=Tasks)
 
     async def create(self, data: schemas.CreateRequest, commons: CommonsDependencies) -> Tasks:
-        created_by = self.get_current_user(commons=commons)
-        task = Tasks(summary=data.summary, description=data.description, status="to_do", created_by=created_by)
+        task = Tasks(summary=data.summary, description=data.description, status="to_do", created_by=commons.current_user)
         return await self.save(data=task)
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> Tasks:
-        updated_by = self.get_current_user(commons=commons)
-        data = internal_models.EditWithAudit(summary=data.summary, description=data.description, updated_by=updated_by)
+        data = internal_models.EditWithAudit(summary=data.summary, description=data.description, updated_by=commons.current_user)
         return await self.update_by_id(_id=_id, data=data)
 
 

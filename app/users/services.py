@@ -48,8 +48,7 @@ class UserServices(BaseServices[Users]):
         return await self.update_by_id(_id=_id, data=data)
 
     async def grant_admin(self, _id: str, commons: CommonsDependencies = None):
-        updated_by = self.get_current_user(commons=commons)
-        data = internal_models.GrantAdmin(updated_by=updated_by)
+        data = internal_models.GrantAdmin(updated_by=commons.current_user)
         return await self.update_by_id(_id=_id, data=data)
 
     async def create_admin(self):

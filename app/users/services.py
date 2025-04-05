@@ -23,11 +23,9 @@ class UserServices(BaseServices[Users]):
     async def register(self, data: auth_schemas.RegisterRequest) -> Users:
         # Set the user role to 'USER' by default.
         user_type = value.UserRoles.USER.value
-        # Add the current datetime as the creation time.
-        created_at = self.get_current_datetime()
         # Hash the provided password using bcrypt with a generated salt.
         hashed_password = await auth_services.hash(value=data.password)
-        user_model = Users.from_register(data=data, user_type=user_type, hashed_password=hashed_password, created_at=created_at)
+        user_model = Users.from_register(data=data, user_type=user_type, hashed_password=hashed_password)
         # Save the user, ensuring the email is unique, using the save_unique function.
         user = await self.save_unique(data=user_model, unique_field="email")
         # Update created_by after register to preserve query ownership logic
@@ -46,7 +44,7 @@ class UserServices(BaseServices[Users]):
         return user
 
     async def edit(self, _id: str, data: schemas.EditRequest, commons: CommonsDependencies) -> Users:
-        data = internal_models.EditWithAudit.from_edit_request(data, updated_by=commons.current_user)
+        data = internal_models.EditWithAudit(fullname=data.fullname, phone=data.phone, updated_by=commons.current_user)
         return await self.update_by_id(_id=_id, data=data)
 
     async def grant_admin(self, _id: str, commons: CommonsDependencies = None):

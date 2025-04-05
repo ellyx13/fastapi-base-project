@@ -39,10 +39,10 @@ class RoutersCBV:
     @router.get("/tasks/{_id}", status_code=200, responses={200: {"model": schemas.Response, "description": "Get task success"}})
     @access_control(public=False)
     async def get_detail(self, _id: ObjectIdStr, fields: str = None):
-        results = await task_controllers.get_by_id(_id=_id, fields_limit=fields, commons=self.commons)
+        result = await task_controllers.get_by_id(_id=_id, fields_limit=fields, commons=self.commons)
         if fields:
-            return results
-        return schemas.Response(**results)
+            return result
+        return schemas.Response.model_validate(obj=result, from_attributes=True)
 
     @router.post("/tasks", status_code=201, responses={201: {"model": schemas.Response, "description": "Register task success"}})
     @access_control(public=False)

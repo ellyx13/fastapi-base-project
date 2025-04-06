@@ -20,7 +20,7 @@ Welcome to the FastAPI Base Project! This foundational template is designed for 
 
 ### Prerequisites
 
-- [Python](https://www.python.org/)
+- [Python >= 3.12](https://www.python.org/)
 - [Pip](https://pip.pypa.io/en/stable/installation/)
 - [Git](https://git-scm.com/)
 - [Docker](https://www.docker.com/)
@@ -45,7 +45,7 @@ environment=dev
 app_database_name=app
 database_url=mongodb://db?retryWrites=true
 
-# Authentication 
+# Authentication
 SECRET_KEY={ENTER_YOUR_SECRET_KEY}
 ALGORITHM="HS512"
 DEFAULT_ADMIN_EMAIL={ENTER_YOUR_DEFAULT_EMAIL}
@@ -56,6 +56,12 @@ DEFAULT_ADMIN_PASSWORD={ENTER_YOUR_DEFAULT_PASSWORD}
 ```plaintext
 ENVIRONMENT=test
 database_url=mongodb://db-test?retryWrites=true
+```
+
+### Installing Dependencies
+1. Install uv package manager:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ### Install pre-commit

@@ -1,14 +1,14 @@
-from typing import Type
+from typing import Generic, Type, TypeVar
 
 from core.schemas import CommonsDependencies
 from pydantic import BaseModel
 
 from .services import BaseServices
 
-NOT_DECLARED_SERVICE = "Service must be an instance of BaseServices. Maybe the service has not been declared when creating the class Controllers"
+TService = TypeVar("TService")
 
 
-class BaseControllers:
+class BaseControllers(Generic[TService]):
     """
     A base class for controllers that provides common methods for interacting with services.
 
@@ -24,9 +24,19 @@ class BaseControllers:
         service (BaseServices): The service instance used for performing operations.
     """
 
-    def __init__(self, controller_name: str, service: BaseServices = None) -> None:
+    def __init__(self, controller_name: str, service: TService = None) -> None:
         self.controller_name = controller_name
         self.service = service
+
+    def ensure_service_provided(self) -> None:
+        """
+        Ensures that a service instance is provided.
+
+        Raises:
+            TypeError: If the service is not an instance of `BaseServices`.
+        """
+        if not isinstance(self.service, BaseServices):
+            raise TypeError("Service must be an instance of BaseServices. Maybe the service has not been declared when creating the class Controllers")
 
     async def get_all(
         self,
@@ -41,8 +51,7 @@ class BaseControllers:
         include_deleted: bool = False,
         commons: CommonsDependencies = None,
     ) -> dict:
-        if not isinstance(self.service, BaseServices):
-            raise TypeError(NOT_DECLARED_SERVICE)
+        self.ensure_service_provided()
         results = await self.service.get_all(
             query=query,
             search=search,
@@ -58,22 +67,19 @@ class BaseControllers:
         return results
 
     async def get_by_id(self, _id, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None) -> dict:
-        if not isinstance(self.service, BaseServices):
-            raise TypeError(NOT_DECLARED_SERVICE)
+        self.ensure_service_provided()
         result = await self.service.get_by_id(_id=_id, fields_limit=fields_limit, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)
         return result
 
     async def get_by_field(
         self, data: str, field_name: str, fields_limit: list | str = None, ignore_error: bool = False, include_deleted: bool = False, commons: CommonsDependencies = None
     ) -> list:
-        if not isinstance(self.service, BaseServices):
-            raise TypeError(NOT_DECLARED_SERVICE)
+        self.ensure_service_provided()
         result = await self.service.get_by_field(data=data, field_name=field_name, fields_limit=fields_limit, ignore_error=ignore_error, include_deleted=include_deleted, commons=commons)
         return result
 
     async def soft_delete_by_id(self, _id: str, ignore_error: bool = False, commons: CommonsDependencies = None) -> dict:
-        if not isinstance(self.service, BaseServices):
-            raise TypeError(NOT_DECLARED_SERVICE)
+        self.ensure_service_provided()
         result = await self.service.soft_delete_by_id(_id=_id, ignore_error=ignore_error, commons=commons)
         return result
 

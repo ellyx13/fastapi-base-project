@@ -1,16 +1,15 @@
 from auth import schemas as auth_schemas
 from core.controllers import BaseControllers
 from core.schemas import CommonsDependencies
-from core.services import BaseServices
 
 from . import schemas
 from .models import Users
-from .services import user_services
+from .services import UserServices, user_services
 
 
-class UserControllers(BaseControllers):
-    def __init__(self, controller_name: str, service: BaseServices = None) -> None:
-        super().__init__(controller_name, service)
+class UserControllers(BaseControllers[UserServices]):
+    def __init__(self) -> None:
+        super().__init__(controller_name="users", service=user_services)
 
     async def register(self, data: auth_schemas.RegisterRequest) -> Users:
         return await self.service.register(data=data)
@@ -30,4 +29,4 @@ class UserControllers(BaseControllers):
         return await self.edit(_id=commons.current_user, data=data, commons=commons)
 
 
-user_controllers = UserControllers(controller_name="users", service=user_services)
+user_controllers = UserControllers()

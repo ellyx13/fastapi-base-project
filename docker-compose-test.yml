@@ -1,6 +1,8 @@
 services:
   api-test:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.test
     restart: always
     command: pytest ./tests/
     volumes:

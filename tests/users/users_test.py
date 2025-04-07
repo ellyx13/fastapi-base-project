@@ -7,7 +7,7 @@ payload_user_register = {"fullname": "testuser", "email": "test@example.com", "p
 @pytest.mark.asyncio(scope="session")
 async def test_user_register_success(client: AsyncClient):
     response = await client.post("v1/auth/register", json=payload_user_register)
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 @pytest.mark.asyncio(scope="session")

@@ -1,0 +1,32 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [release/*, main]
+  pull_request:
+    branches: [release/*, main]
+
+jobs:
+  test:
+    name: ✅ Build & Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⏬ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📝 Write .env/dev.env and .env/test.env from secrets
+        run: |
+          mkdir -p .env
+          echo "${{ secrets.DEV_ENV }}" > .env/dev.env
+          echo "${{ secrets.TEST_ENV }}" > .env/test.env
+
+      - name: 🐳 Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔧 Make test script executable
+        run: chmod +x bin/linux/test.sh
+
+      - name: 🧪 Run build + test
+        run: ./bin/linux/test.sh
+
